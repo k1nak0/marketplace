@@ -1,5 +1,4 @@
 {
-  "mcpServers": {
     "context7": {
       "type": "stdio",
       "command": "pnpm",
@@ -30,5 +29,4 @@
         "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     }
-  }
 }
