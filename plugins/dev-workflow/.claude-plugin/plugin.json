@@ -28,5 +28,6 @@
     "./agents/feature-developer.md",
     "./agents/code-reviewer.md",
     "./agents/post-mortem-analyst.md"
-  ]
+  ],
+  "mcpServers": "./.mcp.json"
 }
