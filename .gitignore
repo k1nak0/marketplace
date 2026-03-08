@@ -1,7 +1,6 @@
 # Workspace inter-phase data (task-specific, not for version control)
 .claude/workspaces/
 .claude/.claude-status.json
-.serena
 
 # Node / pnpm
 node_modules/
