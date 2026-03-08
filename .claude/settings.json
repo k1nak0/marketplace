@@ -12,5 +12,8 @@
   "enabledMcpjsonServers": [
     "context7",
     "serena"
-  ]
+  ],
+  "enabledPlugins": {
+    "dev-workflow@k1nak0": true
+  }
 }
