@@ -1,0 +1,18 @@
+{
+  "name": "k1nak0",
+  "owner": {
+    "name": "k1nak0",
+    "email": "itkmaingit@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "source": "./plugins/dev-workflow",
+      "description": "A multi-agent development workflow plugin that orchestrates requirement gathering, codebase investigation, library research, TDD implementation, automated code review, human review, and documentation/persistence — all from within Claude Code.",
+      "version": "1.0.0",
+      "author": {
+        "name": "dango"
+      }
+    }
+  ]
+}

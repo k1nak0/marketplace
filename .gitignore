@@ -1,0 +1,10 @@
+# Workspace inter-phase data (task-specific, not for version control)
+.claude/workspaces/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# OS
+.DS_Store
+Thumbs.db

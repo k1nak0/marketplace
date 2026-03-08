@@ -1,0 +1,43 @@
+{
+  "name": "dev-workflow",
+  "version": "1.0.0",
+  "description": "A multi-agent development workflow plugin that orchestrates requirement gathering, codebase investigation, library research, TDD implementation, automated code review, human review, and documentation/persistence — all from within Claude Code.",
+  "author": {
+    "name": "k1nak0"
+  },
+  "homepage": "https://github.com/k1nak0/marketplace",
+  "repository": "https://github.com/k1nak0/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "tdd",
+    "multi-agent",
+    "requirements",
+    "code-review",
+    "documentation"
+  ],
+  "skills": [
+    "./skills/orchestrator",
+    "./skills/analyze-requirements",
+    "./skills/doc-git-specialist"
+  ],
+  "agents": [
+    "./agents/repository-explorer.md",
+    "./agents/library-researcher.md",
+    "./agents/implementation-architect.md",
+    "./agents/feature-developer.md",
+    "./agents/code-reviewer.md",
+    "./agents/post-mortem-analyst.md"
+  ],
+  "mcpServers": {
+    "serena": {
+      "description": "Symbol-level codebase investigation for Phase 2"
+    },
+    "context7": {
+      "description": "Library documentation retrieval for Phase 3"
+    },
+    "github": {
+      "description": "Integration to GitHub for issue creation, commenting, and status updates during code review and post-mortem analysis"
+    }
+  }
+}
