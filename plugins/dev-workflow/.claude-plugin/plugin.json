@@ -28,16 +28,5 @@
     "./agents/feature-developer.md",
     "./agents/code-reviewer.md",
     "./agents/post-mortem-analyst.md"
-  ],
-  "mcpServers": {
-    "serena": {
-      "description": "Symbol-level codebase investigation for Phase 2"
-    },
-    "context7": {
-      "description": "Library documentation retrieval for Phase 3"
-    },
-    "github": {
-      "description": "Integration to GitHub for issue creation, commenting, and status updates during code review and post-mortem analysis"
-    }
-  }
+  ]
 }
