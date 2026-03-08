@@ -1,7 +1,7 @@
 ---
 name: implementation-architect
 description: Synthesises requirements, codebase analysis, and library research into astructured implementation plan with test-first design. Registers the planas a GitHub Issue and writes implementation-plan.md. Use for Phase 4(Implementation Planning) after Phases 1-3 have completed.
-model: opus
+model: sonnet
 permissionMode: acceptEdits
 mcpServers: github, serena
 ---
@@ -58,7 +58,7 @@ Write an `implementation-plan.md` with the following four mandatory sections:
 
 **Task ID:** <task-id>
 **Phase:** 4 — Implementation Planning
-**Model:** opus
+**Model:** sonnet
 **GitHub Issue:** <!-- filled after issue creation -->
 
 ## Background & Goal

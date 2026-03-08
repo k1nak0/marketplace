@@ -3,7 +3,7 @@ name: dev-workflow
 description: Main entry point for the Universal Development Workflow. Orchestrates all phases from raw user intent through committed, reviewed, documented code. Invoke this skill to start a new development task or to resume an interrupted one. Creates a tracked todo list before executing any work, guaranteeing sequential phase progression and resumability across sessions.
 argument-hint: "<requirements specification>"
 model: sonnet
-allowed-tools: Glob, Grep, Read, Edit, Write, Bash, WebFetch, WebSearch, ToolSearch, Agent, TaskCreate, TaskGet, TaskUpdate, TaskList, Skill, mcp__context7__*, mcp__serena__*, mcp__github__*
+allowed-tools: AskUserQuestion, Glob, Grep, Read, Edit, Write, Bash, WebFetch, WebSearch, ToolSearch, Agent, TaskCreate, TaskGet, TaskUpdate, TaskList, Skill, mcp__context7__*, mcp__serena__*, mcp__github__*
 user-invocable: true
 ---
 
@@ -27,7 +27,7 @@ The table below describes every phase, its mechanism, and its contract with you.
 | 1 | Requirement Understanding | Skill: `analyze-requirements` | sonnet | User interview | `requirements-report.md`, `status.json` |
 | 2 | Codebase Investigation | Agent: `repository-explorer` | sonnet | `requirements-report.md` | `impact-analysis-report.md` |
 | 3 | Library Investigation | Agent: `library-researcher` *(conditional)* | sonnet | `requirements-report.md` | `library-usage-report.md` |
-| 4 | Implementation Planning | Agent: `implementation-architect` | **opus** | All reports + `CLAUDE.md` | `implementation-plan.md`, GitHub Issue URL |
+| 4 | Implementation Planning | Agent: `implementation-architect` | **sonnet** | All reports + `CLAUDE.md` | `implementation-plan.md`, GitHub Issue URL |
 | 5 | Implementation (TDD) | Agent: `feature-developer` *(resumable)* | sonnet | `implementation-plan.md` | Modified source files, test results |
 | 6 | Automated Review | Agent: `code-reviewer` | sonnet | Changed files + plan + `CLAUDE.md` | `review-report.md` |
 | 7 | Human Review Gate | **Orchestrator inline** | — | Diff + Issue link + test summary | approve / minor-fix / major-rework |
@@ -43,7 +43,7 @@ Uses Serena MCP tools exclusively (`find_symbol`, `find_referencing_symbols`, `g
 Uses Context7 MCP tools exclusively (`resolve-library-id`, `get-library-docs`). Skipped entirely when `requirements-report.md` says "New library required: no". Returns only the path to `library-usage-report.md`.
 
 **`implementation-architect`**
-Uses claude-opus. Reads all available workspace reports and `CLAUDE.md` before writing a plan. Adopts test-first design (test cases defined before implementation steps). Creates a GitHub Issue and saves the URL to `status.json`. Returns the plan path and Issue URL.
+Uses claude-sonnet. Reads all available workspace reports and `CLAUDE.md` before writing a plan. Adopts test-first design (test cases defined before implementation steps). Creates a GitHub Issue and saves the URL to `status.json`. Returns the plan path and Issue URL.
 
 **`feature-developer`**
 Follows TDD where practical: Red (write failing unit tests) → Green (minimum implementation to pass). Only unit tests (no I/O) are in-scope; skipping a test is acceptable when a unit test cannot reasonably be written. Retries up to 3 times per failing test group. On exceeding the retry limit: writes `blocked-report.md` and halts. Saves its Context ID to `status.json` before modifying any file, enabling resumption by the review loop and human gate. Returns the list of modified files and test summary.
@@ -73,7 +73,8 @@ fi
 
 If `.claude/.claude-status.json` is found and `status.json` can be read:
 - Extract `task_id`, `current_phase`, and `status`.
-- Tell the user: "Active task found: `<task-id>` at `<current_phase>` (`<status>`). Resume? [yes/no]"
+- Display: "Active task found: `<task-id>` at `<current_phase>` (`<status>`)."
+- Use `AskUserQuestion` with the question "Would you like to resume this task?" and options: `["yes", "no"]`.
 - If **yes**: skip to the section **Resuming an Interrupted Task** below.
 - If **no**: proceed to Step 1 with a fresh task.
 
@@ -179,6 +180,8 @@ jq '. + {"current_phase": "phase-2"}' "$WORKSPACE/status.json" \
   && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
 ```
 
+Log: "No user input required — auto-proceeding to Phase 2."
+
 ---
 
 ### Phase 2 — Codebase Investigation
@@ -213,6 +216,8 @@ jq '. + {"current_phase": "phase-3"}' "$WORKSPACE/status.json" \
   && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
 ```
 
+Log: "No user input required — auto-proceeding to Phase 3."
+
 ---
 
 ### Phase 3 — Library Investigation (Conditional)
@@ -233,6 +238,7 @@ Read `requirements-report.md` → section "External Dependencies".
     > "$WORKSPACE/status.json.tmp" \
     && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
   ```
+- Log: "No user input required — auto-proceeding to Phase 4."
 - Proceed to Phase 4 immediately.
 
 **If "New library required: yes":**
@@ -260,6 +266,8 @@ jq '. + {"current_phase": "phase-4"}' "$WORKSPACE/status.json" \
   > "$WORKSPACE/status.json.tmp" \
   && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
 ```
+
+Log: "No user input required — auto-proceeding to Phase 4."
 
 ---
 
@@ -298,6 +306,8 @@ jq '. + {"current_phase": "phase-5"}' "$WORKSPACE/status.json" \
   > "$WORKSPACE/status.json.tmp" \
   && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
 ```
+
+Log: "No user input required — auto-proceeding to Phase 5."
 
 ---
 
@@ -344,6 +354,8 @@ jq '. + {"current_phase": "phase-6"}' "$WORKSPACE/status.json" \
   > "$WORKSPACE/status.json.tmp" \
   && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
 ```
+
+Log: "No user input required — auto-proceeding to Phase 6."
 
 ```
 TaskUpdate(taskId=TASK_5, status="completed")
@@ -415,7 +427,7 @@ Re-invoke `code-reviewer` after the fix. If the verdict is still FAIL:
   the user with a summary of the persistent findings, then halt. Do not loop
   further. The user must decide whether to adjust constraints and restart from
   Phase 4, or intervene manually.
-- Otherwise, repeat the loop (resume `feature-developer` → re-run `code-reviewer`).
+- Otherwise: Log: "No user input required — auto-proceeding to re-run Phase 6 review." Then repeat the loop (resume `feature-developer` → re-run `code-reviewer`).
 
 **If verdict is PASS:**
 
@@ -426,6 +438,8 @@ jq '. + {"current_phase": "phase-7"}' "$WORKSPACE/status.json" \
   > "$WORKSPACE/status.json.tmp" \
   && mv "$WORKSPACE/status.json.tmp" "$WORKSPACE/status.json"
 ```
+
+Log: "No user input required — auto-proceeding to Phase 7."
 
 ```
 TaskUpdate(taskId=TASK_6, status="completed")
@@ -449,12 +463,9 @@ Display the following to the user:
 2. **GitHub Issue link** from `status.json → github_issue_url`
 3. **Test result summary** returned by `feature-developer`
 
-Then ask:
+Then use `AskUserQuestion` with the question "Please review the changes above. What would you like to do?" and options: `["approve — proceed to documentation and PR creation", "minor-fix — I'll resume the developer to address your feedback", "major-rework — generate a fix report and restart planning"]`.
 
-> "Please review the changes above. Choose one:
-> - **approve** — proceed to documentation and PR creation
-> - **minor-fix** — I'll resume the developer to address your feedback
-> - **major-rework** — generate a fix report and restart planning"
+Parse the user's selection to determine the branch: `approve`, `minor-fix`, or `major-rework`.
 
 **On `approve`:**
 ```
@@ -470,7 +481,7 @@ jq '. + {"current_phase": "phase-a8"}' "$WORKSPACE/status.json" \
 → Proceed to Phase a-8/a-9
 
 **On `minor-fix`:**
-Ask the user to describe the fix. Resume `feature-developer` via saved Context ID:
+Use `AskUserQuestion` with the question "Please describe the fix you'd like applied." (free-text input, no predefined options). Resume `feature-developer` via saved Context ID with the user's response:
 ```
 MINOR_FIX_RESULT = Agent(
   subagent_type="feature-developer",
@@ -494,7 +505,7 @@ TaskUpdate(taskId=TASK_6, status="in_progress")
 Re-run Phase 6 (automated review) after the fix. Then return to Phase 7.
 
 **On `major-rework`:**
-Ask the user for their feedback (required input to Phase b-8). Then:
+Use `AskUserQuestion` with the question "Please describe what needs to be reworked and why." (free-text input, no predefined options). This feedback is required input to Phase b-8. Then:
 ```
 TaskUpdate(taskId=TASK_7, status="completed")
 
@@ -545,6 +556,16 @@ jq '. + {"current_phase": "phase-4-restart", "status": "restarting"}' "$WORKSPAC
   TASK_7 = TaskCreate(subject="Phase 7 — Human Review Gate (restart)", ...)
   ```
 - Return to **Phase 4** (the `fix-report.md` will be read by `implementation-architect`).
+
+Print the following message to the user:
+
+> **Fix report is complete.** To resume from Phase 4 in a new session, run:
+>
+> ```
+> /dev-workflow:orchestrator
+> ```
+>
+> State has been saved to `status.json` (`current_phase: "phase-4-restart"`).
 
 ---
 

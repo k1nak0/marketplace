@@ -11,11 +11,11 @@ A Claude Code plugin that orchestrates a full development lifecycle — from raw
 | 1 | Requirement Understanding | Skill: `/analyze-requirements` | sonnet |
 | 2 | Codebase Investigation | Subagent: `repository-explorer` | sonnet |
 | 3 | Library Investigation | Subagent: `library-researcher` | sonnet |
-| 4 | Implementation Planning | Subagent: `implementation-architect` | opus |
+| 4 | Implementation Planning | Subagent: `implementation-architect` | sonnet |
 | 5 | Implementation (TDD) | Subagent: `feature-developer` | sonnet |
 | 6 | Automated Review | Subagent: `code-reviewer` | sonnet |
 | 7 | Human Review Gate | Orchestrator (main session) | — |
-| a-8/a-9 | Documentation & Persistence | Skill: `/doc-git-specialist` | fsonnet |
+| a-8/a-9 | Documentation & Persistence | Skill: `/doc-git-specialist` | sonnet |
 | b-8 | Fix Report (on major rejection) | Subagent: `post-mortem-analyst` | sonnet |
 
 ---
