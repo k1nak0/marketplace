@@ -18,7 +18,7 @@
       "name": "implementation-workflow",
       "source": "./plugins/implementation-workflow",
       "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement doc) through codebase investigation, planning, TDD implementation, automated review, human review, and commit/PR persistence.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "dango"
       }
