@@ -1,152 +1,142 @@
-# Universal Development Workflow Plugin
+# Development Workflow Plugins
 
-A Claude Code plugin that orchestrates a full development lifecycle — from raw user intent to committed, reviewed, and documented code — using a multi-agent pipeline with strict context isolation.
+Two Claude Code plugins that together take a raw idea to a merged pull
+request: **task-splitter** turns requirements into a behavior design and a set
+of GitHub Issues, and **implementation-workflow** turns one of those Issues
+into reviewed, committed code.
+
+They're independent — either can be installed and used on its own.
+`implementation-workflow` accepts a `task-splitter`-generated Map Issue, but
+also works from a standalone requirement description.
 
 ---
 
-## What It Does
+## task-splitter
 
-| Phase | Name | Mechanism | Model |
-|-------|------|-----------|-------|
-| 1 | Requirement Understanding | Skill: `/analyze-requirements` | sonnet |
-| 2 | Codebase Investigation | Subagent: `repository-explorer` | sonnet |
-| 3 | Library Investigation | Subagent: `library-researcher` | sonnet |
-| 4 | Implementation Planning | Subagent: `implementation-architect` | sonnet |
-| 5 | Implementation (TDD) | Subagent: `feature-developer` | sonnet |
-| 6 | Automated Review | Subagent: `code-reviewer` | sonnet |
-| 7 | Human Review Gate | Orchestrator (main session) | — |
-| a-8/a-9 | Documentation & Persistence | Skill: `/doc-git-specialist` | sonnet |
-| b-8 | Fix Report (on major rejection) | Subagent: `post-mortem-analyst` | sonnet |
+| Phase | Name | Mechanism | Output |
+|-------|------|-----------|--------|
+| 1 | Requirement Understanding | Skill: `understand-requirements` | `requirements-report.md` |
+| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md` |
+| 3 | Task Planning | Skill: `plan-tasks` | `task-breakdown-plan.md` |
+| — | Confirm Gate | `AskUserQuestion` | go/no-go before Issue creation |
+| 4 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues |
+
+## implementation-workflow
+
+| Phase | Name | Mechanism | Output |
+|-------|------|-----------|--------|
+| 1 | Requirement Understanding | Skill: `requirement-understanding` | `requirements-report.md` |
+| 2 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
+| 3 | Library Investigation | Agent: `library-researcher` | `library-usage-report.md` (conditional) |
+| 4 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md` |
+| 5 | Implementation | Agent: `feature-developer` | modified source + doc updates |
+| 6 | Automated Review | Agent: `code-reviewer` | `review-report.md` (loops to 5 on FAIL, up to 5x) |
+| 7 | Human Review Gate | Orchestrator inline | `approve` / `request-changes` |
+| 8 | Persistence | Agent: `persistence-engineer` | commit, push, PR |
+| 9 | Map Issue Update | Orchestrator inline | flips the task row to `done` (map issue) or closes the standalone tracking issue |
 
 ---
 
 ## Prerequisites
 
 - Claude Code (latest)
-- `jq` installed on the host (used by the SessionStart hook)
+- `gh` CLI, installed and authenticated with push/issue/PR access to your
+  repository — both plugins use it directly instead of a bundled GitHub MCP
+  server
 - `git` configured with push access to your repository
+- Optionally, a `docs/tool.md` in your project describing your test/lint
+  commands and any project-specific MCP tools (code search, docs, browser/
+  verification tools). Neither plugin ships its own MCP servers — this is how
+  they discover what your project has available. If it's missing, both
+  orchestrators print a starter template the first time they run; this is a
+  nudge, not a requirement.
 
 ---
 
 ## Installation
 
-### From the Marketplace
-
 ```shell
-/plugin install dev-workflow@k1nak0
+/plugin install task-splitter@k1nak0
+/plugin install implementation-workflow@k1nak0
 ```
 
 ---
 
 ## Usage
 
-### Starting a New Task
-
-Run Phase 1 to begin:
+### Splitting an epic into tasks
 
 ```
-/analyze-requirements
+/task-splitter:task-splitter
 ```
 
-The skill will:
-1. Generate a unique task ID (e.g., `task-20260308-143022`)
-2. Create `.claude/workspaces/<task-id>/`
-3. Conduct a structured interview (goals → features → constraints → DoD)
-4. Write `requirements-report.md` and `status.json`
+Walks through requirements → design → task breakdown → a confirmation
+question → Map Issue + Task Issue creation on GitHub.
 
-### Running the Pipeline
-
-After Phase 1, the orchestrator (main Claude session) invokes each subsequent
-phase in order using the `Agent` tool:
+### Implementing a task
 
 ```
-Phase 2: Use the repository-explorer subagent with input .claude/workspaces/<task-id>/requirements-report.md
-Phase 3: Use the library-researcher subagent (skip if no external library needed)
-Phase 4: Use the implementation-architect subagent
-Phase 5: Use the feature-developer subagent
-Phase 6: Use the code-reviewer subagent
-Phase 7: Human review gate (see below)
-Phase a-8/a-9: /doc-git-specialist <task-id>
+/implementation-workflow:implementation-workflow
 ```
 
-### Phase 7 — Human Review Gate
+Give it a Map Issue number/URL to pick up the next ready task from
+`task-splitter`, or describe a standalone requirement to skip the Map Issue
+entirely. Walks through investigation → planning → implementation → review →
+your approval → commit/PR → marking that task `done` (Map Issue) or closing
+its own tracking issue (standalone). A Map Issue task is claimed
+(`in-progress`) as soon as it's selected, and flipped to `blocked` instead of
+left dangling if implementation or review can't reach a resolution.
 
-After Phase 6 passes, the orchestrator displays:
-- Git diff of all changed files
-- GitHub Issue link (from `status.json`)
-- Test result summary
+### Resuming an interrupted run
 
-You then choose one of three outcomes:
-
-| Input | Action |
-|-------|--------|
-| `approve` | Run `/doc-git-specialist <task-id>` |
-| `minor-fix` | Orchestrator resumes `feature-developer` via saved Context ID |
-| `major-rework` | Orchestrator runs `post-mortem-analyst`, then restarts from Phase 4 |
-
-### Resuming a Session
-
-The SessionStart hook automatically loads the current task state when Claude Code
-starts. If a task is in progress, you will see:
-
-```
-=== Active Task State ===
-Task ID:       task-20260308-143022
-Current Phase: phase-5
-Status:        in_progress
-GitHub Issue:  https://github.com/owner/repo/issues/42
-========================
-```
-
-To resume, tell Claude which phase to continue from.
+Within the same session, `TaskList` still reflects progress — just ask the
+orchestrator to continue. If the session itself restarted, there's no
+automatic resume (neither plugin uses a startup hook): tell the orchestrator
+which task to continue (`.claude/task-splitter/<task-id>/` or
+`.claude/implementation-workflow/<task-id>/`), and it works out what's already
+done from which files exist in that directory.
 
 ---
 
 ## Workspace Layout
 
-All inter-phase data lives under `.claude/workspaces/<task-id>/`:
+Inter-phase artifacts are plain markdown/JSON files, not a state machine:
 
 ```
 .claude/
-└── workspaces/
-    └── task-20260308-143022/
-        ├── status.json                  # Task state, Context IDs, Issue/PR URLs
-        ├── requirements-report.md       # Phase 1 output
-        ├── impact-analysis-report.md    # Phase 2 output
-        ├── library-usage-report.md      # Phase 3 output (if applicable)
-        ├── implementation-plan.md       # Phase 4 output
-        ├── review-report.md             # Phase 6 output
-        ├── fix-report.md                # Phase b-8 output (if applicable)
-        └── blocked-report.md            # Phase 5 output on retry failure (if applicable)
+├── task-splitter/<task-id>/
+│   ├── requirements-report.md
+│   ├── task-breakdown-plan.md
+│   └── issue-map.json              # task → issue number, for register-tasks
+└── implementation-workflow/<task-id>/
+    ├── requirements-report.md
+    ├── impact-analysis-report.md
+    ├── library-usage-report.md     # if applicable
+    ├── implementation-plan.md
+    ├── modified-files.json
+    ├── review-report.md
+    └── blocked-report.md           # if the retry limit was exceeded
 ```
 
-`status.json` schema:
-```json
-{
-  "task_id": "<task-id>",
-  "current_phase": "phase-5",
-  "feature_developer_context_id": "<agent-id>",
-  "github_issue_url": "https://github.com/...",
-  "github_pr_url": null,
-  "status": "in_progress"
-}
-```
+Design docs land in `docs/design/<slug>.md` (permanent, not scratch) —
+behavior-only, with an `## Implementation Notes` section that
+`feature-developer` appends technical decisions and lessons to after
+implementing.
 
 ---
 
 ## Design Principles
 
-1. **Context purity** — Heavy work (investigation, generation, analysis) runs in
-   isolated subagents. The main REPL context receives only structured summaries.
-
-2. **Test-first** — Phase 5 writes failing tests before any implementation code.
-   The loop continues until all tests pass.
-
-3. **Persistence** — All inter-phase data is written to `.claude/workspaces/`
-   so sessions can be interrupted and resumed without loss.
-
-4. **Traceability** — Every plan is a GitHub Issue. Every implementation has a PR.
-   Every rejection has a fix report posted as a GitHub comment.
+1. **Behavior/implementation separation** — `docs/design/` describes what a
+   feature does, never how it's built. `implementation-workflow` picks the
+   how, per task, grounded in an actual codebase investigation.
+2. **No bundled infrastructure** — no plugin-owned MCP servers, no hooks, no
+   custom state machine. GitHub via `gh`, code/doc search via built-in tools
+   or whatever the consuming project declares in `docs/tool.md`.
+3. **One external action per confirmation** — Issue creation, commits, and PRs
+   only happen after an explicit human go-ahead.
+4. **Traceability** — every task is a GitHub Issue; every implementation has a
+   PR referencing it.
 
 ---
 
