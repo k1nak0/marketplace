@@ -1,0 +1,30 @@
+{
+  "name": "implementation-workflow",
+  "version": "1.0.0",
+  "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement doc) through codebase investigation, planning, TDD implementation, automated review, human review, and commit/PR persistence.",
+  "author": {
+    "name": "k1nak0"
+  },
+  "homepage": "https://github.com/k1nak0/marketplace",
+  "repository": "https://github.com/k1nak0/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "tdd",
+    "multi-agent",
+    "code-review",
+    "github-issues"
+  ],
+  "skills": [
+    "./skills/orchestrator",
+    "./skills/requirement-understanding",
+    "./skills/implementation-planning"
+  ],
+  "agents": [
+    "./agents/repository-explorer.md",
+    "./agents/library-researcher.md",
+    "./agents/feature-developer.md",
+    "./agents/code-reviewer.md",
+    "./agents/persistence-engineer.md"
+  ]
+}

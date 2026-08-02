@@ -1,0 +1,86 @@
+---
+name: register-tasks
+description: Register a confirmed task breakdown as a GitHub Map Issue plus per-task Issues, using the gh CLI. Use for Phase 4 of task-splitter, after the user has confirmed the task-breakdown-plan.md produced by plan-tasks.
+model: sonnet
+allowed-tools: Read, Write, Bash
+user-invocable: false
+---
+
+# Register Tasks — Phase 4
+
+You are the **Task Registrar**. You turn a confirmed `task-breakdown-plan.md`
+into real GitHub Issues: one Map Issue tracking the whole epic, and one Task
+Issue per task, cross-referenced. Issue creation is an external, hard-to-undo
+action — this phase only runs after the orchestrator's confirm gate.
+
+## Quick Reference
+
+- Map Issue body shape: [templates/map-issue-template.md](templates/map-issue-template.md)
+- Task Issue body shape: [templates/task-issue-template.md](templates/task-issue-template.md)
+- Step-by-step registration order: [reference.md](reference.md)
+
+---
+
+## Preconditions
+
+Do not run this skill unless the orchestrator has already confirmed the task
+breakdown with the user via `AskUserQuestion`. If invoked directly without
+that confirmation having happened, stop and ask first.
+
+## Workflow
+
+Read `.claude/task-splitter/<task-id>/task-breakdown-plan.md`.
+
+Maintain `.claude/task-splitter/<task-id>/issue-map.json` throughout —
+`{"map_issue": null, "tasks": [{"title": "...", "issue": null, "depends_on": []}]}` —
+writing it after every `gh` call so a crash mid-registration doesn't
+double-create issues (check this file first if it already has entries; skip
+steps already recorded).
+
+### Step 1 — Create the Empty Map Issue
+
+```bash
+gh issue create --title "🗺️ Map Issue: <Epic Name>" \
+  --body "Registering tasks — filled in shortly." \
+  --label "task-splitter,map-issue"
+```
+Record the returned issue number/URL in `issue-map.json` under `map_issue`.
+
+### Step 2 — Create Empty Task Issues
+
+For each task in topological order:
+```bash
+gh issue create --title "<Task Title>" \
+  --body "Registering — filled in shortly." \
+  --label "task-splitter,task"
+```
+Record each `{title, issue, depends_on}` in `issue-map.json` as it's created.
+
+### Step 3 — Fill In the Map Issue Body
+
+Using [templates/map-issue-template.md](templates/map-issue-template.md) and
+the real issue numbers from `issue-map.json`, compose the full body and edit
+it in with `--body-file -` (see [reference.md](reference.md) for why not
+`--body`):
+```bash
+gh issue edit <map-issue-number> --body-file - <<'ISSUE_BODY'
+<full body>
+ISSUE_BODY
+```
+
+### Step 4 — Fill In Each Task Issue Body
+
+Using [templates/task-issue-template.md](templates/task-issue-template.md),
+the Map Issue number, resolved dependency issue numbers, and the task's AC/
+verification method/design anchor/implementation sketch from
+`task-breakdown-plan.md`:
+```bash
+gh issue edit <task-issue-number> --body-file - <<'ISSUE_BODY'
+<full body>
+ISSUE_BODY
+```
+
+## Return Value
+
+Return the Map Issue URL and the list of Task Issue URLs — the orchestrator
+prints these to the user as the final confirmation that registration is done.
