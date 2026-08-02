@@ -48,6 +48,13 @@ See `plugins/implementation-workflow/skills/*/reference.md` and
 `agents/*.md` for test-strategy inference rules, the review-loop cap, and the
 PR body contract.
 
+Standalone skill (outside the nine-phase pipeline): `onboarding`
+(`/implementation-workflow:onboarding`) — verifies `gh` CLI/GitHub-remote
+prerequisites and creates or updates the consuming project's `docs/tool.md`.
+Run once when adopting the plugin, or whenever project tooling changes. See
+`plugins/implementation-workflow/skills/onboarding/reference.md` for the
+manifest-file auto-detection heuristics.
+
 ---
 
 ## Shared Conventions (both plugins)
@@ -60,7 +67,9 @@ PR body contract.
   *consuming* project in its own `docs/tool.md`; skills/agents `ToolSearch`
   for them by name when `docs/tool.md` mentions one. Both orchestrators check
   for `docs/tool.md` at startup and print a starter template if it's missing
-  — this is a nudge, not a requirement.
+  — this is a nudge, not a requirement. `implementation-workflow`'s
+  `onboarding` skill is where a user actually resolves that nudge instead of
+  dismissing it.
 - **No custom session-management infrastructure.** No SessionStart hooks, no
   `status.json` state machine. Cross-phase handoff is plain markdown files
   under `.claude/task-splitter/<task-id>/` or

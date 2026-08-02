@@ -17,6 +17,7 @@
   ],
   "skills": [
     "./skills/orchestrator",
+    "./skills/onboarding",
     "./skills/requirement-understanding",
     "./skills/implementation-planning"
   ],
