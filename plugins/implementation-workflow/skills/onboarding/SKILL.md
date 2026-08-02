@@ -1,6 +1,6 @@
 ---
 name: onboarding
-description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever docs/tool.md needs revisiting. Not part of the nine-phase pipeline; user-invoked directly.
+description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites, checks for a root CLAUDE.md, and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever docs/tool.md needs revisiting. Not part of the nine-phase pipeline; user-invoked directly.
 model: sonnet
 allowed-tools: AskUserQuestion, Glob, Grep, Read, Write, Edit, Bash
 user-invocable: true
@@ -8,13 +8,15 @@ user-invocable: true
 
 # Onboarding
 
-You are the **Onboarder**. implementation-workflow's phases quietly assume two
-things are in place: a working `gh` CLI pointed at a real GitHub repo (Phases
-1, 4, 8, 9 all shell out to it), and a `docs/tool.md` telling later phases
-which test/lint/build commands and MCP tools this specific project uses. Both
-are currently only checked as a non-blocking nudge from inside
-`requirement-understanding`. This skill is where a user actually resolves
-that nudge, once, up front.
+You are the **Onboarder**. implementation-workflow's phases quietly assume
+three things are in place: a working `gh` CLI pointed at a real GitHub repo
+(Phases 1, 4, 8, 9 all shell out to it), a root `CLAUDE.md` (Phase 4 reads it
+for conventions, Phase 5's `feature-developer` appends new rules to it), and a
+`docs/tool.md` telling later phases which test/lint/build commands and MCP
+tools this specific project uses. All three are currently either a
+non-blocking nudge (`docs/tool.md`) or not checked at all (`CLAUDE.md`,
+`gh`) before the pipeline just runs into them. This skill is where a user
+actually resolves them, once, up front.
 
 ## Quick Reference
 
@@ -42,7 +44,21 @@ is informational: continue to Step 2 regardless of the outcome here, but
 call out clearly in the final summary if `gh` isn't usable yet, since Phases
 1/4/8/9 of the main pipeline will fail without it.
 
-## Step 2 — Check for `docs/tool.md`
+## Step 2 — Check for a Root `CLAUDE.md`
+
+```bash
+test -f CLAUDE.md && echo present || echo missing
+```
+
+**If present:** nothing to do, move on to Step 3.
+
+**If missing:** don't generate one yourself — that's the built-in `init`
+skill's job, and duplicating it here would just create a second, likely
+worse, code path for the same output. Tell the user to run `/init` first,
+then continue to Step 3 regardless; note in the final summary that
+`CLAUDE.md` is still missing so it isn't lost as a follow-up.
+
+## Step 3 — Check for `docs/tool.md`
 
 ```bash
 test -f docs/tool.md && echo present || echo missing
@@ -50,11 +66,11 @@ test -f docs/tool.md && echo present || echo missing
 
 **If present:** show the current contents and ask the user (`AskUserQuestion`,
 options `["leave as-is", "update it"]`) whether to leave it or walk through an
-update. If "leave as-is", skip to Step 4.
+update. If "leave as-is", skip to Step 5.
 
-**If missing:** continue to Step 3.
+**If missing:** continue to Step 4.
 
-## Step 3 — Populate `docs/tool.md`
+## Step 4 — Populate `docs/tool.md`
 
 1. Auto-detect Test / Lint / Build commands by inspecting the project's
    manifest files per the heuristics in [reference.md](reference.md)
@@ -75,10 +91,11 @@ update. If "leave as-is", skip to Step 4.
    (matching the template's placeholder comment) if nothing applies rather
    than inventing content.
 
-## Step 4 — Summary
+## Step 5 — Summary
 
 Report what's in place and what still needs the user's action:
 - `gh` CLI: usable / needs `gh auth login` / needs a remote
+- `CLAUDE.md`: present / missing (run `/init`)
 - `docs/tool.md`: created / updated / left as-is, with its path
 
 Nothing here writes to `.claude/implementation-workflow/` — that's created
