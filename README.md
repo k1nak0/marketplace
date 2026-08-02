@@ -33,7 +33,7 @@ also works from a standalone requirement description.
 | 6 | Automated Review | Agent: `code-reviewer` | `review-report.md` (loops to 5 on FAIL, up to 5x) |
 | 7 | Human Review Gate | Orchestrator inline | `approve` / `request-changes` |
 | 8 | Persistence | Agent: `persistence-engineer` | commit, push, PR |
-| 9 | Map Issue Update | Orchestrator inline | flips the task row to `done` |
+| 9 | Map Issue Update | Orchestrator inline | flips the task row to `done` (map issue) or closes the standalone tracking issue |
 
 ---
 
@@ -82,8 +82,10 @@ question → Map Issue + Task Issue creation on GitHub.
 Give it a Map Issue number/URL to pick up the next ready task from
 `task-splitter`, or describe a standalone requirement to skip the Map Issue
 entirely. Walks through investigation → planning → implementation → review →
-your approval → commit/PR → (if it came from a Map Issue) marking that task
-`done`.
+your approval → commit/PR → marking that task `done` (Map Issue) or closing
+its own tracking issue (standalone). A Map Issue task is claimed
+(`in-progress`) as soon as it's selected, and flipped to `blocked` instead of
+left dangling if implementation or review can't reach a resolution.
 
 ### Resuming an interrupted run
 

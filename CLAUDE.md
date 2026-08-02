@@ -34,15 +34,15 @@ approval, and commit/PR. Entry point:
 
 | Phase | Name | Mechanism | Output |
 |-------|------|-----------|--------|
-| 1 | Requirement Understanding | Skill: `requirement-understanding` | `requirements-report.md` |
+| 1 | Requirement Understanding | Skill: `requirement-understanding` | `requirements-report.md`; for `map-issue`, claims the selected task by flipping its row to `in-progress` |
 | 2 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
 | 3 | Library Investigation *(conditional)* | Agent: `library-researcher` | `library-usage-report.md` |
-| 4 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md`, posted to the Task Issue (or a new standalone Issue) |
+| 4 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md`, posted to the Task Issue (or a new standalone tracking Issue) |
 | 5 | Implementation | Agent: `feature-developer` *(resumable this session)* | modified source + `CLAUDE.md`/`README.md`/`docs/design/*` updates |
 | 6 | Automated Review | Agent: `code-reviewer` | `review-report.md`; loops back to Phase 5 on FAIL, up to 5 attempts |
 | 7 | Human Review Gate | Orchestrator inline | `approve` or `request-changes` via `AskUserQuestion` |
 | 8 | Persistence | Agent: `persistence-engineer` | commit, push, PR via `gh` |
-| 9 | Map Issue Update | Orchestrator inline | flips the task's row to `done`, closes the Task Issue (skipped for standalone tasks) |
+| 9 | Map Issue Update | Orchestrator inline | `map-issue`: flips the task's row to `done`, closes the Task Issue. `standalone`: closes the tracking issue Phase 4 created (no Map Issue table to update). Phases 5/6 flip the row to `blocked` instead on an unresolved halt (`map-issue` only) |
 
 See `plugins/implementation-workflow/skills/*/reference.md` and
 `agents/*.md` for test-strategy inference rules, the review-loop cap, and the

@@ -59,7 +59,9 @@ Write to
 
 ## Return Value
 
-Return the plan path, the declared test strategy, and the Issue URL (existing
-Task Issue comment link, or newly-created issue URL) — enough for the
-orchestrator to hand off to Phase 5 and, later, for `persistence-engineer` to
-reference in the PR body.
+Return the plan path, the declared test strategy, and the **tracking issue
+number** (the Task Issue number for `map-issue`, or the number of the issue
+just created for `standalone`) plus its URL. Call this
+`TRACKING_ISSUE_NUMBER` in the orchestrator's working context from here on —
+Phases 6, 8, and 9 all reference the same number regardless of `source_type`,
+since both paths now have a real GitHub issue to comment on and close.

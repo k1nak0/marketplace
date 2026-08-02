@@ -22,6 +22,31 @@ A task is **ready** when `status == "not-started"` and every issue number in
 session/agent already has it; surface that possibility to the user rather than
 silently picking a different task).
 
+## Claiming the Selected Task
+
+Immediately after a task is selected (Step 6 in SKILL.md), flip its row's
+status to `in-progress` before doing anything else:
+
+```bash
+gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
+<same body, with the selected row's Status cell changed to in-progress>
+MAP_BODY
+```
+
+This is the same `gh issue edit`-a-markdown-table pattern Phase 9 of the
+orchestrator uses to flip a row to `done` — no new mechanism, just applied
+earlier in the pipeline. It's best-effort: two sessions reading the Map Issue
+within the same few seconds could still both see `not-started` and both
+claim it. That's an acceptable gap given this plugin's "no custom state
+machine" design — it closes the common case (a stale or re-invoked session
+picking up a task someone else already finished or is deep into) without
+building real distributed locking on top of GitHub Issues.
+
+If the orchestrator later halts this task (`blocked-report.md`, or the
+review-fix loop exceeding its retry cap — see the orchestrator's Phase 5/6),
+it flips the row from `in-progress` to `blocked` rather than leaving it
+`in-progress` forever or silently reverting it to `not-started`.
+
 ## Converting a Task Issue Body into requirements-report.md
 
 The Task Issue body (per task-splitter's template) has: Description,

@@ -24,8 +24,10 @@ updated by `feature-developer` in Phase 5 — do not touch docs here.
 
 1. `.claude/implementation-workflow/<task-id>/` (workspace: requirements
    report, implementation plan, review report, modified-files.json)
-2. `source_type` (`map-issue` | `standalone`) and, if `map-issue`, the Task
-   Issue number — provided by the orchestrator.
+2. `source_type` (`map-issue` | `standalone`) and the tracking issue number —
+   provided by the orchestrator. A real issue exists for both source types
+   (the Task Issue for `map-issue`, or the one `implementation-planning`
+   created for `standalone`), so the same number is always present.
 
 ## Workflow
 
@@ -43,7 +45,7 @@ and `modified-files.json`.
 - <change 2>
 ...
 
-Closes #<task-issue-number>   # only if source_type == map-issue
+Closes #<tracking-issue-number>
 Tests: <N unit tests passing | manual verification: <outcome>>
 ```
 
@@ -76,7 +78,7 @@ list it with its verification result — automated (N tests passing) or manual
 (what was checked and observed).>
 
 ## Related
-- Closes #<task-issue-number>   (only if source_type == map-issue)
+- Closes #<tracking-issue-number>
 - Implementation Plan: .claude/implementation-workflow/<task-id>/implementation-plan.md
 - Review Report: .claude/implementation-workflow/<task-id>/review-report.md
 PR_BODY

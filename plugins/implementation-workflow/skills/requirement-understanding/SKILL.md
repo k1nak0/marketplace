@@ -46,7 +46,12 @@ issue #N" / pastes a GitHub issue URL): **Input A**. Otherwise: **Input B**.
    done) and stop — don't fabricate a task.
 4. If exactly one ready task: use it.
 5. If more than one: `AskUserQuestion` to let the user pick.
-6. `gh issue view <task-issue-number> --json body` and convert its body
+6. **Claim it** before doing anything else: edit the Map Issue to flip the
+   selected row's status from `not-started` to `in-progress` (see
+   [reference.md](reference.md) for the exact edit). This is best-effort, not
+   a hard lock — but it closes the common case where a resumed or re-invoked
+   session would otherwise silently pick the same task a second time.
+7. `gh issue view <task-issue-number> --json body` and convert its body
    (Description / Acceptance Criteria / Verification Method / Implementation
    Sketch) into `requirements-report.md`. Record `source_type: map-issue`,
    the Map Issue number, and the Task Issue number.

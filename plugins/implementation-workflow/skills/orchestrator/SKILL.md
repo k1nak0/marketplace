@@ -118,8 +118,12 @@ Output: .claude/implementation-workflow/<TASK_ID>/library-usage-report.md")
 ```
 Skill(skill="implementation-workflow:implementation-planning")
 ```
-Confirm `implementation-plan.md` exists and note the declared test strategy
-and the Issue URL/comment it published to.
+Confirm `implementation-plan.md` exists and note the declared test strategy.
+Save the returned issue number as `TRACKING_ISSUE_NUMBER` in your working
+context — for `map-issue` this is the Task Issue number already known from
+Phase 1; for `standalone` it's the issue Phase 4 just created. Phases 6, 8,
+and 9 all act on `TRACKING_ISSUE_NUMBER` regardless of `source_type`, since
+both paths now have a real issue to comment on and close.
 
 ### Phase 5
 ```
@@ -131,8 +135,13 @@ Save the returned agent/context ID in your working context as
 `FEATURE_DEV_CONTEXT_ID` — you'll need it for the Phase 6 fix loop and Phase 7
 request-changes branch.
 
-**If `blocked-report.md` was written:** surface it to the user; ask whether to
+**If `blocked-report.md` was written:** if `source_type == map-issue`, first
+flip this task's row in the Map Issue to `blocked` (same `gh issue edit`
+pattern as Phase 9) so it isn't picked up as `ready` by another run while it
+needs human attention. Then surface the report to the user; ask whether to
 retry with adjusted constraints or go back to Phase 4 with corrective input.
+If the user chooses to retry, flip the row back to `in-progress` before
+resuming.
 
 ### Phase 6
 
@@ -158,14 +167,16 @@ Update `FEATURE_DEV_CONTEXT_ID` from the result. Increment
 `REVIEW_FIX_ATTEMPTS`. Re-run `code-reviewer`.
 - If still FAIL and `REVIEW_FIX_ATTEMPTS >= MAX_REVIEW_FIX_ATTEMPTS`:
   ```bash
-  gh issue comment <task-issue-number> --body-file - <<'COMMENT'
+  gh issue comment <TRACKING_ISSUE_NUMBER> --body-file - <<'COMMENT'
   Automated review could not reach PASS after 5 fix attempts. Summary of
   persistent findings: <from the latest review-report.md>
   COMMENT
   ```
-  (skip the `gh` call if `source_type == standalone` — there's no issue to
-  comment on; tell the user directly instead.) Then stop; this task needs
-  human intervention.
+  This runs for both `source_type`s — `TRACKING_ISSUE_NUMBER` always points to
+  a real issue (the Task Issue for `map-issue`, or the one Phase 4 created for
+  `standalone`). If `source_type == map-issue`, also flip this task's row in
+  the Map Issue to `blocked`. Then tell the user directly and stop; this task
+  needs human intervention.
 - Otherwise, loop back to the start of Phase 6.
 
 **If PASS:** continue to Phase 7.
@@ -194,15 +205,21 @@ Update `FEATURE_DEV_CONTEXT_ID`. Re-run Phase 6, then return to Phase 7.
 Agent(subagent_type="persistence-engineer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 source_type: <map-issue|standalone>
-Task Issue: #<N> (if map-issue)")
+Tracking Issue: #<TRACKING_ISSUE_NUMBER>")
 ```
 Confirm the PR URL is returned.
 
 ### Phase 9 — Map Issue Update (Orchestrator Inline)
 
-Skip entirely (log only) if `source_type == standalone`.
+**If `source_type == standalone`:** there's no Map Issue table to update, but
+the tracking issue Phase 4 created still needs closing:
+```bash
+gh issue close <TRACKING_ISSUE_NUMBER> --comment "Implemented in <PR URL>."
+```
+Print the final summary and stop — the Map Issue table logic below doesn't
+apply.
 
-Otherwise:
+**If `source_type == map-issue`:**
 ```bash
 gh issue view <map-issue-number> --json body
 ```
@@ -213,7 +230,7 @@ those as newly-unblocked in the summary you print to the user.
 gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
 <updated body>
 MAP_BODY
-gh issue close <task-issue-number> --comment "Implemented in <PR URL>."
+gh issue close <TRACKING_ISSUE_NUMBER> --comment "Implemented in <PR URL>."
 ```
 
 Print the final summary: Task ID, PR URL, Map/Task Issue links (if
