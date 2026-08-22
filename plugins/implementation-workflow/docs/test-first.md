@@ -22,22 +22,67 @@ built.
 
 ---
 
+## Two kinds of test, one specification
+
+A task's specification has two halves, and most tasks have both:
+
+| | Automated tests | Manual tests |
+|---|---|---|
+| What it is | An **executable** document | A **non-executable** document |
+| Lives in | The project's test suite | `docs/manual-tests/<slug>.md` |
+| Checked by | The test runner, in CI | A human, following the steps |
+| Committed? | **Yes** | **Yes** |
+| Frozen after Phase 8? | **Yes** | **Yes** |
+
+That is the *only* difference between them. Both state observable behaviour in
+the requirement's vocabulary, both are read by a human at the Phase 8 gate,
+both go into the same `test(...)` commit, and the implementer may edit neither.
+
+**There is always a test commit.** Even a task whose behaviour is entirely
+visual produces one — it carries the manual-test document.
+
+Automated is the default and the strong preference: an executable document
+cannot silently rot. A behaviour becomes a manual test only when an automated
+test genuinely cannot express it — a rendered surface, a live external system.
+"Awkward to test" and "the suite has no precedent for this" are reasons to
+write the fixture, not reasons to write a manual test.
+
+### Where manual tests live
+
+`docs/manual-tests/<slug>.md`, one file per feature area, indexed by
+`docs/manual-tests/index.md`, which the project's `README.md` links to. They
+are reachable documentation, not a scratch artifact: the whole reason they are
+committed rather than posted to an Issue is that someone has to find and re-run
+them before the *next* release, not just this one.
+
+The **procedure** is committed. The **execution record** — who ran it, when,
+what they observed on this particular change — is *how the change was checked*
+and goes to the PR body and the Issue, per `vcs-minimalism.md`. Do not append
+run logs to the committed document.
+
+---
+
 ## The sequence
 
 ```
-Phase 7   test-writer writes tests. No production code.
-          Runs them → they must fail, for the right reason.
-Phase 8   Human reads the tests and approves them.
+Phase 7   test-writer writes the automated tests and the manual-test doc.
+          No production code.
+          Runs the automated ones → they must fail, for the right reason.
+Phase 8   Human reads both and approves them.
           ├── request-changes → back to Phase 7
           └── approve → commit them  (test(...): …, local only)   ← FREEZE POINT
-Phase 9   implementer makes them pass. Tests are now immutable.
-Phase 10  code-reviewer verifies the tests were not touched.
+Phase 9   implementer makes the automated tests pass and executes the manual
+          steps. Both documents are now immutable.
+Phase 10  code-reviewer verifies neither was touched.
 ```
 
 ## What `test-writer` may write
 
 - **Test files.** The behaviour under test, expressed as assertions a human can
   read as a specification.
+- **The manual-test document** under `docs/manual-tests/`, plus its row in
+  `docs/manual-tests/index.md` and — if absent — the `README.md` link to that
+  index.
 - **Scaffolding, only where a language demands it.** In a compiled or
   statically-checked language the test won't build unless the symbols it calls
   exist. `test-writer` may create the *minimum* signature-only declarations
@@ -45,10 +90,9 @@ Phase 10  code-reviewer verifies the tests were not touched.
   raises/returns a "not implemented" error, nothing more. No logic, no partial
   implementation.
 - **CI configuration, when the project has none that can run these tests.** If
-  the test strategy is `automated`, the tests must actually run somewhere other
-  than one agent's laptop. If no CI workflow exists, or the existing one
-  doesn't execute this suite, `test-writer` adds or extends it as part of the
-  same commit.
+  there are automated tests, they must actually run somewhere other than one
+  agent's laptop. If no CI workflow exists, or the existing one doesn't execute
+  this suite, `test-writer` adds or extends it as part of the same commit.
 
 `test-writer` writes **no production code**. If it finds itself needing to, the
 scaffolding rule above is the ceiling — anything more means the task is
@@ -58,9 +102,11 @@ underspecified, and it should halt and say so rather than start implementing.
 
 After the freeze point, the following are all forbidden, without exception:
 
-- Editing, deleting, renaming, or moving any file in `test_files`.
+- Editing, deleting, renaming, or moving any file in `test_files` or
+  `manual_test_files`.
 - Weakening a test: relaxing an assertion, widening a tolerance, adding
-  `skip` / `xfail` / `.only` / `pending`, commenting a case out.
+  `skip` / `xfail` / `.only` / `pending`, commenting a case out. For a manual
+  step: softening its pass criterion, or reinterpreting it as satisfied.
 - Changing the test runner's configuration, fixtures, or CI workflow so that a
   frozen test stops running, stops failing the build, or runs against different
   inputs.
@@ -74,7 +120,7 @@ implementations is precisely the implementer's job.
 This happens, and it is not a failure of the process — it usually means the
 specification had a genuine gap that only became visible under
 implementation. The implementer's move is to **stop and escalate, never to
-edit.**
+edit.** This applies identically to an automated test and to a manual step.
 
 Write `.claude/implementation-workflow/<task-id>/test-dispute.md`:
 
@@ -82,7 +128,7 @@ Write `.claude/implementation-workflow/<task-id>/test-dispute.md`:
 # Test Dispute
 
 **Task ID:** <task-id>
-**Test(s) in question:** <test id / name / file:line>
+**Test(s) in question:** <test id / name / file:line, or manual step number>
 
 ## What the test asserts
 ## Why I believe it's wrong
@@ -95,58 +141,60 @@ make pass" is not a dispute, it's a difficulty.>
 ```
 
 Then halt and return. The orchestrator surfaces it to the human, who either
-sends the run back to Phase 7 to amend and re-approve the tests (the test
-commit is amended, not appended to), or rejects the dispute and the
+sends the run back to Phase 7 to amend and re-approve the specification (the
+test commit is amended, not appended to), or rejects the dispute and the
 implementer resumes under the original specification.
 
-## How the freeze is verified (Phase 10)
+## The manifest
 
 `test-writer` records the contract in
 `.claude/implementation-workflow/<task-id>/test-manifest.json`:
 
 ```json
 {
-  "test_commit": "<sha, filled in at the freeze point>",
-  "test_files": ["path/to/test_a", "..."],
-  "scaffold_files": ["path/to/stub", "..."],
+  "test_commit": null,
+  "test_files": ["path/to/test_a"],
+  "manual_test_files": ["docs/manual-tests/booking.md"],
+  "scaffold_files": ["path/to/stub"],
   "ci_files": [".github/workflows/test.yml"],
   "test_command": "<command that runs the suite>"
 }
 ```
 
+- Either `test_files` or `manual_test_files` may be empty. **Not both** — a
+  task with no specification of either kind has nothing to freeze and nothing
+  to review; halt and say so.
+- `test_commit` stays `null` until the orchestrator fills it in at the freeze
+  point.
+- `test_command` may be `null` when `test_files` is empty.
+
+## How the freeze is verified (Phase 10)
+
 `code-reviewer` checks, mechanically, before reviewing anything else:
 
 ```bash
-git diff --stat <test_commit>..HEAD -- <every path in test_files>   # must be empty
-git diff <test_commit>..HEAD -- <every path in ci_files>            # inspect any change
+# no committed change since the freeze
+git diff --stat <test_commit>..HEAD -- <test_files> <manual_test_files>   # must be empty
+# no uncommitted change either — the implementation is uncommitted at this point,
+# so this is the check that actually catches tampering
+git status --porcelain -- <test_files> <manual_test_files>                # must be empty
+git diff <test_commit>..HEAD -- <ci_files>                                # inspect any change
+git status --porcelain -- <ci_files>                                      # inspect any change
 ```
 
-A non-empty diff on `test_files` is a **Critical** finding on its own, whatever
-the change was and however reasonable it looks. A change to `ci_files` is not
-automatically a finding, but any change that reduces what runs or what fails
-the build is Critical. `code-reviewer` also re-reads the frozen tests against
-the Issue's acceptance criteria: a test that passes because it asserts nothing
-meaningful is a Critical finding against the implementation, not a request to
-change the test.
+Any change to `test_files` or `manual_test_files` is a **Critical** finding on
+its own, whatever the change was and however reasonable it looks. A change to
+`ci_files` is not automatically a finding, but any change that reduces what
+runs or what fails the build is Critical. `code-reviewer` also re-reads the
+frozen specification against the Issue's acceptance criteria: a test that
+passes because it asserts nothing meaningful is a Critical finding against the
+implementation, not a request to change the test.
 
-## Manual verification strategy
+## Executing the manual tests
 
-When the plan's strategy is `manual` (UI, live external systems — cases where
-an automated test genuinely can't express the behaviour), the same shape
-applies with the artifact swapped:
-
-- `test-writer` writes a **verification procedure** — numbered steps, each with
-  what to do and the exact observation that constitutes a pass — instead of
-  test code.
-- The human approves the procedure at the Phase 8 gate.
-- The procedure is **not committed**: it's *how* to check, which belongs to the
-  Issue and the PR (see `vcs-minimalism.md`). It's posted as an Issue comment
-  at approval time. There is no test commit in this case, and the PR consists
-  of the implementation commits alone.
-- The implementer executes the procedure verbatim and records each step's
-  observed result, which goes into the PR body.
-- The implementer may not amend the procedure. The dispute path above applies
-  unchanged.
-
-If the strategy is `automated`, there is no discretion: the tests are written,
-approved, committed, and frozen.
+The implementer executes every step in `manual_test_files` **verbatim** and
+records the observed result for each. If an observation doesn't match its pass
+criterion, that's a failure — fix the implementation, don't reinterpret the
+step. The record goes to `why-notes.md` under `## For the PR body`, and from
+there into the PR body and an Issue comment. It is never written back into the
+committed document.

@@ -1,5 +1,4 @@
 ---
-name: issue-refinement
 description: Runs when the user rejects a task's content at the Phase 1 scrutiny gate. Talks the change through with the user, then rewrites the Task Issue, updates every Issue and Map Issue row the change affects, and brings the docs/design/ documents back in line — shipping the doc changes as their own PR. Use for Phase 2 of implementation-workflow, only on a needs-refinement verdict.
 model: sonnet
 user-invocable: false
@@ -93,8 +92,15 @@ If the change is a genuine reversal of a documented decision rather than a
 correction — the old behaviour was chosen deliberately and is now being
 abandoned — that's an ADR, per
 [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)'s half-day test.
-Write it under `docs/adr/` as part of this PR, with `**Status:** draft`, and
-flip it to `accepted` when the PR is merged.
+Write it under `docs/adr/`, add its row to `docs/adr/index.md`, and include
+both in this PR.
+
+**Write it as `**Status:** accepted`, not `draft`,** with today's `**Date:**`.
+This is the one place in the plugin where an ADR skips the draft stage, and the
+reason is that there is no later gate for it: this PR *is* the change that
+ships the decision, the user approved it in the Step 1 discussion, and Phase 12
+deliberately only flips drafts the *implementer* wrote. An ADR left as `draft`
+here would reach the default branch and stay `draft` forever.
 
 ## Step 4 — Ship the Doc Changes as Their Own PR
 
@@ -105,7 +111,7 @@ Design-doc churn does not belong in the implementation PR's diff. Follow
 BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
 git fetch origin "$BASE"
 git switch --create "docs/<issue#>-<slug>" "origin/$BASE"
-git add -- docs/design/... docs/prd.md docs/adr/...
+git add -- docs/design/... docs/prd.md docs/adr/... docs/adr/index.md
 git commit   # docs(<scope>): <what behaviour the docs now describe>
 git push -u origin HEAD
 gh pr create --base "$BASE" --title "..." --body-file - <<'PR_BODY'
@@ -135,7 +141,8 @@ and the Map Issue table rules):
    follow task-splitter's Task Issue template exactly, so the rest of the
    pipeline can read them.
 4. If a task became unnecessary, close it with a comment saying which decision
-   obsoleted it, and remove its row (or mark it `dropped`) in the Map Issue.
+   obsoleted it, and set its Map Issue row's Status to `dropped` — keep the
+   row, so a reader tracing a "Depends on: #124" can still find #124.
 
 ## Step 6 — Wait for the Doc PR to Merge
 
@@ -162,7 +169,8 @@ PR, and never merge it yourself.
   closed
 - The doc PR URL and its merge state, or an explicit "no behaviour change, no
   doc PR"
-- Any ADR written, with its number
+- Any ADR written, with its number and its status (`accepted` — this path does
+  not leave drafts behind)
 - Whether the task is still the right one to work on this run — a refinement
   that split the task means Phase 1 has to re-run its selection, not just its
   scrutiny gate. Say so plainly if that's the case.

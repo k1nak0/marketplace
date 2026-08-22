@@ -1,6 +1,5 @@
 ---
-name: implementation-planning
-description: Synthesise requirements, codebase analysis, and library research into a concrete implementation plan with a declared test strategy, a CI readiness check, and a documentation update plan. Runs inline (not as an isolated agent) so it can ask the user directly when the test strategy can't be inferred. Posts the plan to the Task Issue (or creates a standalone Issue) via gh. Use for Phase 6, after Phases 1-5 have completed.
+description: Synthesise requirements, codebase analysis, and library research into a concrete implementation plan that splits every acceptance criterion into automated test cases and manual test steps, plus a CI readiness check and a documentation update plan. Runs inline (not as an isolated agent) so it can ask the user directly when the test strategy can't be inferred. Posts the plan to the Task Issue (or creates a standalone Issue) via gh. Use for Phase 6, after Phases 1-5 have completed.
 model: sonnet
 user-invocable: false
 ---
@@ -9,10 +8,11 @@ user-invocable: false
 
 You are the **Implementation Planner**. Unlike the investigation phases, you
 run inline in the orchestrator's session, specifically so you can ask the user
-directly when the test strategy can't be inferred from the available reports.
+directly when a criterion's routing can't be inferred from the available
+reports.
 
 Your plan has two consumers, and the split matters: **`test-writer` reads the
-test strategy and the test-case table to write the specification, and
+test-case table and the manual steps to write the specification, and
 `implementer` reads the technical specification to satisfy it.** Write the
 test-case table as behaviour a human will approve at a gate, not as a list of
 functions to cover.
@@ -20,7 +20,7 @@ functions to cover.
 ## Quick Reference
 
 - Plan template: [templates/implementation-plan-template.md](templates/implementation-plan-template.md)
-- Test-strategy inference and CI rules: [reference.md](reference.md)
+- Criterion routing and CI rules: [reference.md](reference.md)
 - Where the plan itself is allowed to live: [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 - The test-first contract the plan feeds: [../../docs/test-first.md](../../docs/test-first.md)
 
@@ -34,20 +34,36 @@ functions to cover.
 `library-usage-report.md` (if present), `CLAUDE.md`, and the
 `docs/design/<slug>.md` this task belongs to.
 
-### 2. Determine the Test Strategy
+### 2. Route Every Acceptance Criterion
 
-Follow the inference rules in [reference.md](reference.md): the requirements
-report's Definition of Done first, then `docs/tool.md`. If it's still
-ambiguous, `AskUserQuestion` — "automated unit tests, or a manual verification
-procedure?" — with a one-line note on what makes it ambiguous.
+There is no single "test strategy" to pick. Each acceptance criterion in the
+requirements report's Definition of Done goes into one of three buckets, and
+most tasks end up with something in more than one:
 
-`automated` is the default and the strong preference. `manual` is for
-behaviour a unit test genuinely cannot express (visual output, a live external
-system), not for behaviour that's merely awkward to test.
+| Bucket | Becomes | Where it lands |
+|---|---|---|
+| A runner can check it | An automated test case | The test suite |
+| A runner genuinely cannot | A manual test step | `docs/manual-tests/<slug>.md` — committed |
+| Deliberately not specified this task | An out-of-scope row | The plan's Out-of-Scope section |
 
-### 3. Check CI Readiness (automated strategy only)
+Both kinds are written by `test-writer`, approved by the human at the Phase 8
+gate, and frozen in the same test commit. The only difference is that one is
+executable and the other isn't (`../../docs/test-first.md`).
 
-Look for CI that will actually run this suite: `.github/workflows/*.yml`, plus
+`automated` is the default and the strong preference — an executable document
+can't silently rot. Route a criterion to manual only when an automated test
+genuinely cannot express it: a rendered surface, a live external system.
+"Awkward to test" is a reason to write the fixture.
+
+Follow the routing rules in [reference.md](reference.md): the Definition of
+Done first, then `docs/tool.md`. **If a criterion is genuinely ambiguous, ask
+the user** — `AskUserQuestion`, naming the criterion and what makes it
+ambiguous, with "automated test" and "manual test step" as the options. This is
+the reason this phase runs inline rather than as an isolated agent; use it.
+
+### 3. Check CI Readiness (whenever there are automated test cases)
+
+Look for CI that will actually run this suite: `.github/workflows/*.yml` and `*.yaml`, plus
 whatever `docs/tool.md` documents. Record in the plan which of these holds:
 
 - CI exists and runs this suite — nothing to do.
@@ -58,13 +74,22 @@ Approved tests that nothing runs on merge are a specification nobody enforces,
 so this is in scope for the task rather than deferred (see
 [reference.md](reference.md)).
 
-### 4. Write the Test Cases
+### 4. Write Both Tables
 
-One row per behaviour, phrased as the observable behaviour and its expected
-result. Include the boundaries the requirement implies — empty input, the
-limit and limit ± 1, the specified error cases. Mark anything that can't be
-unit-tested as out-of-scope explicitly rather than dropping it silently; the
-human sees this table's consequences at the Phase 8 gate.
+**Automated test cases** — one row per behaviour, phrased as the observable
+behaviour and its expected result. Include the boundaries the requirement
+implies: empty input, the limit and limit ± 1, the specified error cases.
+
+**Manual test steps** — one numbered step per behaviour, each with its action
+and the exact observation that constitutes a pass, plus a one-line reason it
+isn't automated. Name any `docs/tool.md` verification tool a step needs.
+
+Either table may be empty; say "none" explicitly rather than omitting the
+section. **Both empty is not a valid plan** — that task has no specification to
+approve at the Phase 8 gate.
+
+Mark anything deliberately unspecified as out-of-scope rather than dropping it
+silently; the human sees these tables' consequences at the Phase 8 gate.
 
 ### 5. Compose the Plan
 
@@ -91,7 +116,8 @@ snapshot of intent at one moment. Never commit it.
 
 ## Return Value
 
-Return the plan path, the declared test strategy, the CI readiness finding,
+Return the plan path, the automated/manual test-case counts, the CI readiness
+finding,
 and the **tracking issue number** (the Task Issue for `map-issue`, or the one
 just created for `standalone`) plus its URL. The orchestrator calls this
 `TRACKING_ISSUE_NUMBER` from here on; every later phase that touches GitHub

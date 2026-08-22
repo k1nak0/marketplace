@@ -1,44 +1,47 @@
 # Implementation Planning — Extended Reference
 
-## Test Strategy Inference
+## Routing a Criterion: Automated or Manual
 
-`automated` is the default. Reach for it when:
+This is a per-criterion decision, not a per-task one. A task with a logic core
+and a rendered surface gets automated tests for the core *and* manual steps for
+the surface — that's the normal shape, not a compromise.
 
-- The requirements report's Definition of Done lists behaviour that can be
-  stated as an input and an expected result.
-- The change is logic with no unavoidable I/O, UI, or live external system.
+**Automated** is the default. Route a criterion here when:
+
+- It can be stated as an input and an expected result.
+- It's logic with no unavoidable I/O, UI, or live external system.
 - `docs/tool.md`'s "Test Command" is filled in and the change sits inside what
   that command exercises.
 
-`manual` only when an automated test genuinely cannot express the behaviour:
+**Manual** only when an automated test genuinely cannot express the behaviour:
 
 - The behaviour is visual, or is a property of a rendered surface.
 - Verifying it requires a live external system that can't be stood in for.
 - `docs/tool.md`'s "Verification Tools (MCP)" names something clearly
   applicable (a Playwright MCP for a UI change, a Godot MCP for a scene) — a
-  strong signal that manual verification with that tool is the intended route.
+  strong signal that a manual step with that tool is the intended route.
 
 "Awkward to test", "would need a fixture", and "the existing suite has no
-precedent for this" are **not** reasons for `manual`. They're reasons to write
+precedent for this" are **not** reasons for manual. They're reasons to write
 the fixture.
 
-Ask the user when:
+**Ask the user** when neither `docs/tool.md` nor the requirements report gives
+any signal for a criterion, or when you can see an automated route but suspect
+it would test a proxy for the behaviour rather than the behaviour. Name the
+criterion and what makes it ambiguous; don't ask a generic "automated or
+manual?" about the whole task.
 
-- The change has both a logic core and a surface that needs live checking, and
-  it isn't obvious which one gates "done" — ask whether both apply or one
-  suffices. Splitting the strategy (automated for the core, a manual step for
-  the surface) is a legitimate answer; record both in the plan.
-- Neither `docs/tool.md` nor the requirements report gives any signal.
-
-The consequence of this choice is larger than it used to be: `automated`
-produces a frozen, committed specification that the implementer cannot alter,
-while `manual` produces a procedure that lives only on the Issue. Say which
-one you chose and why in the plan's Test Strategy section.
+Both kinds carry the same weight downstream: both are committed, both are
+frozen at the Phase 8 gate, and the implementer may edit neither. The manual
+ones land in `docs/manual-tests/<slug>.md`, which `README.md` links to — so
+write the reason each one isn't automated into the plan. It ends up in a
+document people read.
 
 ## CI Readiness
 
-For `automated`, tests that only ever run on one agent's machine aren't a
-specification — they're a suggestion. The plan must record which case applies:
+Whenever there are automated test cases, tests that only ever run on one
+agent's machine aren't a specification — they're a suggestion. The plan must
+record which case applies:
 
 | Finding | What the plan says |
 |---|---|
@@ -57,11 +60,14 @@ If the project deliberately has no CI (no remote, an internal-only repo), the
 user will say so at the Phase 8 gate. Record it as `CI: bootstrap` anyway and
 let them decline — the plan's job is to make the absence visible.
 
+If the task has no automated test cases at all, record `CI: n/a — no automated
+tests this task` rather than leaving the field blank.
+
 ## Writing the Test-Case Table
 
 The table is read twice: by `test-writer` to write the tests, and by the human
 at the Phase 8 gate to decide whether the specification is right. Write for
-the second reader.
+the second reader. The same applies to the manual steps.
 
 | Test ID | Description | Input | Expected Output | Out-of-Scope? |
 |---|---|---|---|---|
@@ -77,6 +83,11 @@ the second reader.
   empty, the specified error case.
 - Mark out-of-scope rows explicitly rather than omitting them — the human at
   the gate needs to see what is deliberately not being specified.
+
+A manual step follows the same rules, with the assertion replaced by an
+observation: "the list re-sorts within 300ms and the previously selected row
+stays selected" passes; "check that sorting works" does not. If two people
+reading the step would disagree about whether it passed, it isn't written yet.
 
 ## Carrying `task-breakdown-plan.md`'s Implementation Sketch Forward
 
