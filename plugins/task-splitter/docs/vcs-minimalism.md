@@ -146,10 +146,8 @@ user and not deferred to `implementation-workflow`. The rules:
 
 ## 6. ADRs written at planning time
 
-If Phase 2 makes a decision that would take a human half a day or more to
-reverse — a public contract, a data shape others will write against, a
-compatibility boundary — it gets an ADR under `docs/adr/`, and that ADR ships
-in the Phase 4 design-doc PR.
+A Phase 2 decision that §3's half-day test promotes to an ADR ships in the
+Phase 4 design-doc PR, under `docs/adr/`.
 
 Because that PR *is* the change which ships the decision, and there is no later
 review gate for it, write the ADR as `**Status:** accepted` directly rather than

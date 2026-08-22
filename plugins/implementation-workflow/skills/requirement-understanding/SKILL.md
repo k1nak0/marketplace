@@ -18,8 +18,10 @@ human, and the cheapest possible moment to find out it's wrong.
 
 ## Quick Reference
 
-- Map Issue parsing, claiming, and the scrutiny checklist:
+- Task selection, claiming, and the scrutiny checklist:
   [reference.md](reference.md)
+- The Map Issue's table contract and how to edit it:
+  [../../docs/map-issue.md](../../docs/map-issue.md)
 - Repository policy this phase inherits:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 
@@ -49,7 +51,8 @@ pasted GitHub issue URL): **Input A**. Otherwise: **Input B**.
 ### Input A — Map Issue
 
 1. `gh issue view <number> --json title,body,number,url` and parse the "Task
-   Graph" table ([reference.md](reference.md) has the exact shape).
+   Graph" table ([../../docs/map-issue.md](../../docs/map-issue.md) §1 has the
+   exact shape).
 2. Compute the **ready** tasks: status `not-started`, and every issue under
    "Depends on" has status `done`.
 3. If zero are ready, say why (nothing ready / everything done / everything

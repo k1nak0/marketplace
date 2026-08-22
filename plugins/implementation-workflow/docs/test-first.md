@@ -55,10 +55,8 @@ are reachable documentation, not a scratch artifact: the whole reason they are
 committed rather than posted to an Issue is that someone has to find and re-run
 them before the *next* release, not just this one.
 
-The **procedure** is committed. The **execution record** — who ran it, when,
-what they observed on this particular change — is *how the change was checked*
-and goes to the PR body and the Issue, per `vcs-minimalism.md`. Do not append
-run logs to the committed document.
+The **procedure** is what's committed there — never the record of one
+execution. See "Executing the manual tests" below.
 
 ---
 

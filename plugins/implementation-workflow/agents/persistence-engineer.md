@@ -25,12 +25,13 @@ and you never run it.
 ## Read First
 
 The orchestrator's prompt gives you the path to this plugin's shared policy
-docs. Read both:
+docs. Read these three:
 
 - `git-workflow.md` — the canonical series shape, the regroup procedure, and
   the push rules. This is your primary specification; follow it exactly.
 - `vcs-minimalism.md` — what goes in the commit body, what goes in the PR body,
   and the ADR lifecycle you complete here.
+- `map-issue.md` — how to edit the Map Issue body in Step 8.
 
 ## Input
 
@@ -204,14 +205,8 @@ run's *observations* are not — that's the record of one execution, which is
 
 Only for `source_type: map-issue`. The orchestrator flips the row's Status to
 `done` in Phase 13; you own the `PR` cell, because you're the one who knows the
-URL. Set it now so the row is never `done` with an empty PR link:
-
-```bash
-gh issue view <map-issue-number> --json body -q .body   # read, edit the row's PR cell, write back
-gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
-<updated body>
-MAP_BODY
-```
+URL. Set it now — per `map-issue.md` — so the row is never `done` with an empty
+PR link.
 
 If that fails, say so and let the orchestrator retry in Phase 13 — it's a
 convenience, not a gate.

@@ -51,12 +51,11 @@ gate, and frozen in the same test commit. The only difference is that one is
 executable and the other isn't (`../../docs/test-first.md`).
 
 `automated` is the default and the strong preference — an executable document
-can't silently rot. Route a criterion to manual only when an automated test
-genuinely cannot express it: a rendered surface, a live external system.
-"Awkward to test" is a reason to write the fixture.
+can't silently rot. [reference.md](reference.md) has the full routing rules
+(the Definition of Done first, then `docs/tool.md`), including what does *not*
+count as a reason to send a criterion to manual.
 
-Follow the routing rules in [reference.md](reference.md): the Definition of
-Done first, then `docs/tool.md`. **If a criterion is genuinely ambiguous, ask
+**If a criterion is genuinely ambiguous, ask
 the user** — `AskUserQuestion`, naming the criterion and what makes it
 ambiguous, with "automated test" and "manual test step" as the options. This is
 the reason this phase runs inline rather than as an isolated agent; use it.
@@ -97,12 +96,10 @@ Write `.claude/implementation-workflow/<task-id>/implementation-plan.md` from
 [templates/implementation-plan-template.md](templates/implementation-plan-template.md).
 
 The **Documentation Update Plan** section covers only `CLAUDE.md` and
-`README.md` — the two repository documents `implementer` may update, and only
-when the change affects what they state. There is no
-`docs/design/<slug>.md#Implementation-Notes` entry: that section no longer
-exists. Instead, note in the plan any decision you can already see coming that
-will need an ADR (a schema, a public contract, a dependency), so the
-implementer isn't deciding under time pressure at the end.
+`README.md` — never `docs/design/<slug>.md`. And note in the plan any decision
+you can already see coming that will need an ADR, so the implementer isn't
+deciding under time pressure at the end. [reference.md](reference.md) has both
+in full.
 
 ### 6. Publish
 

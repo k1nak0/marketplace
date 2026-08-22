@@ -66,15 +66,19 @@ from `modified-files.json` and verify it against a `git write-tree` snapshot
 continuity in `test-authoring-log.md` / `implementation-log.md`, which they
 read first and append to last.
 
-Shared premises all file-writing agents read first live in
-`plugins/implementation-workflow/docs/`: `vcs-minimalism.md` (what may land in
-VCS, the *why* routing, ADR rules and the two acceptance paths),
-`git-workflow.md` (branching, commit shape, where the implementation gets
-committed, the soft-reset regroup, push policy), `test-first.md` (the
-`test-writer`/`implementer` contract, the two kinds of test, and how the freeze
-is verified). The
-orchestrator resolves that directory once at Step 0 and passes it into every
-agent prompt.
+Shared premises live in `plugins/implementation-workflow/docs/`, which the
+orchestrator resolves once at Step 0 and passes into every agent prompt:
+
+| Doc | Covers |
+|-----|--------|
+| `vcs-minimalism.md` | what may land in VCS, the *why* routing, ADR rules and the two acceptance paths |
+| `git-workflow.md` | branching, commit shape, where the implementation gets committed, the soft-reset regroup, push policy |
+| `test-first.md` | the `test-writer`/`implementer` contract, the two kinds of test, how the freeze is verified |
+| `map-issue.md` | the Task Graph table and its status vocabulary, which phase writes which cell, and the `gh issue edit --body-file -` whole-body-rewrite pattern |
+
+The first three are read by every file-writing agent; `map-issue.md` is read by
+whoever touches a GitHub Issue — the orchestrator, `requirement-understanding`,
+`issue-refinement`, and `persistence-engineer`.
 
 See `plugins/implementation-workflow/skills/*/reference.md` and `agents/*.md`
 for per-criterion automated/manual routing, the scrutiny checklist, the
@@ -122,6 +126,13 @@ manifest-file auto-detection heuristics.
   human would need half a day or more to reverse). Each plugin carries its own
   copy of this policy at `plugins/<plugin>/docs/vcs-minimalism.md` because
   plugins install independently — **change one, change both.**
+- **Three cross-plugin pairs are duplicated on purpose**, because a plugin has
+  to work with the other one absent and so cannot link into it: the two
+  `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies,
+  and the Map Issue table contract (`task-splitter`'s
+  `map-issue-template.md` ↔ `implementation-workflow`'s `docs/map-issue.md`).
+  Keep them in sync by hand. Duplication *within* a plugin is not in this
+  category — extract it into that plugin's `docs/` and link to it.
 - **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
   Context / Decision / Consequences / Alternatives Considered) plus
   `docs/adr/index.md`, updated in the same commit as the ADR it describes.
@@ -163,5 +174,18 @@ manifest-file auto-detection heuristics.
   so a broken relative reference between `SKILL.md`/`reference.md`/templates,
   or into `docs/`, fails the build. Skills and agents that link to sibling
   docs don't need to manually re-verify those references stay valid.
+- **Relative markdown links in a skill's own body resolve correctly — this was
+  verified empirically, not assumed.** On every `Skill(...)` invocation the
+  harness prefixes the loaded body with `Base directory for this skill:
+  <absolute path>`; the model joins that with the body's relative links
+  (`[reference.md](reference.md)`, `[../../docs/map-issue.md](...)`) to `Read`
+  them. Confirmed by installing an official marketplace plugin
+  (`claude-code-setup`) and observing its `references/*.md` links resolve from
+  its own (non-cwd) skill directory. `${CLAUDE_PLUGIN_ROOT}` is a different,
+  narrower mechanism for a different problem: a path a **Bash command** or
+  **subagent prompt** needs, where the shell's cwd is the user's project root
+  and knows nothing about "base directory for this skill". Do not convert this
+  plugin's skill-body relative links to `${CLAUDE_PLUGIN_ROOT}` — that would
+  break `lychee` for no correctness gain.
 - Subagent return values are chosen per phase for what's actually useful to
   the caller — not a fixed "summary only" rule.
