@@ -16,10 +16,11 @@ also works from a standalone requirement description.
 | Phase | Name | Mechanism | Output |
 |-------|------|-----------|--------|
 | 1 | Requirement Understanding | Skill: `understand-requirements` | `requirements-report.md` |
-| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md` |
+| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md` (uncommitted) |
 | 3 | Task Planning | Skill: `plan-tasks` | `task-breakdown-plan.md` |
-| — | Confirm Gate | `AskUserQuestion` | go/no-go before Issue creation |
-| 4 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues |
+| — | Confirm Gate | `AskUserQuestion` | go/no-go before anything external |
+| 4 | Design Doc PR | Orchestrator inline | branch `docs/<slug>`, one commit, PR opened |
+| 5 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues |
 
 ## implementation-workflow
 
@@ -31,9 +32,9 @@ also works from a standalone requirement description.
 | 4 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
 | 5 | Library Investigation | Agent: `library-researcher` | `library-usage-report.md` (conditional) |
 | 6 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md` |
-| 7 | Test Authoring | Agent: `test-writer` | tests specifying the behaviour (+ CI, if absent) |
-| 8 | Test Review Gate & Freeze | Orchestrator inline | you approve the tests → they're committed and frozen |
-| 9 | Implementation | Agent: `implementer` | source changes; cannot modify the frozen tests |
+| 7 | Test Authoring | Agent: `test-writer` | automated tests + `docs/manual-tests/<slug>.md` (+ CI, if absent) |
+| 8 | Test Review Gate & Freeze | Orchestrator inline | you approve the specification → it's committed and frozen |
+| 9 | Implementation | Agent: `implementer` | source changes; cannot modify the frozen specification |
 | 10 | Automated Review | Agent: `code-reviewer` | `review-report.md` (verifies the freeze; loops to 9 on FAIL, up to 5x) |
 | 11 | Human Review Gate | Orchestrator inline | `approve` / `request-changes` |
 | 12 | History Cleanup & Persistence | Agent: `persistence-engineer` | regrouped history, push, PR |
@@ -48,13 +49,20 @@ also works from a standalone requirement description.
   them, and they're committed before implementation begins. The implementer
   cannot edit them — if it thinks a test is wrong it has to say so and let you
   decide. The reviewer verifies the freeze mechanically.
+- **Manual tests are tests.** An automated test is an executable document; a
+  manual test procedure is a non-executable one, for behaviour a runner can't
+  check. Both are committed — the manual ones to `docs/manual-tests/`, indexed
+  and linked from your `README.md` — both are frozen at the same gate, and
+  neither is the implementer's to edit. What *isn't* committed is the record of
+  one execution; that goes to the PR.
 - **Minimal footprint in version control.** Source code carries the *how*;
   plans, reports, and narrative live on the Issue and the PR. The *why* always
   lands in VCS — a source comment, a commit message, or an ADR under
   `docs/adr/` when reversing the decision would cost a human half a day.
-- **Clean history.** Send-backs are expected and none of them survive: the
-  branch is regrouped into a test commit plus implementation commits before
-  every push.
+- **Clean history.** Send-backs are expected and none of them survive. The
+  implementation stays uncommitted until the end, then becomes a test commit
+  plus implementation commits in one go — so there's no "fix review comment"
+  commit to squash, because it was never a commit.
 
 ---
 
@@ -92,7 +100,9 @@ also works from a standalone requirement description.
 ```
 
 Walks through requirements → design → task breakdown → a confirmation
-question → Map Issue + Task Issue creation on GitHub.
+question → a design-doc PR → Map Issue + Task Issue creation on GitHub. The
+design docs are committed and pushed by the plugin, on their own branch; the
+PR is opened for you and left for you to merge.
 
 ### Implementing a task
 
@@ -105,8 +115,10 @@ Give it a Map Issue number/URL to pick up the next ready task from
 entirely. Walks through investigation → planning → implementation → review →
 your approval → commit/PR → marking that task `done` (Map Issue) or closing
 its own tracking issue (standalone). A Map Issue task is claimed
-(`in-progress`) as soon as it's selected, and flipped to `blocked` instead of
-left dangling if implementation or review can't reach a resolution.
+(`in-progress`) once you've approved its content at the scrutiny gate — not
+merely when it's selected, so a task you send back for rewriting isn't left
+marked as in flight. It's flipped to `blocked` instead of left dangling if
+implementation or review can't reach a resolution.
 
 ### Resuming an interrupted run
 
@@ -134,8 +146,9 @@ Inter-phase artifacts are plain markdown/JSON files, not a state machine:
     ├── impact-analysis-report.md
     ├── library-usage-report.md     # if applicable
     ├── implementation-plan.md
-    ├── test-manifest.json          # frozen test files + the freeze commit SHA
-    ├── verification-procedure.md   # manual strategy only
+    ├── test-manifest.json          # frozen file lists + the freeze commit SHA
+    ├── test-authoring-log.md       # test-writer's memory across its rounds
+    ├── implementation-log.md       # implementer's memory across its rounds
     ├── why-notes.md                # rationale bound for commit messages / the PR
     ├── modified-files.json
     ├── review-report.md
@@ -143,11 +156,18 @@ Inter-phase artifacts are plain markdown/JSON files, not a state machine:
     └── blocked-report.md           # if the retry limit was exceeded
 ```
 
+The two `*-log.md` files are how agents keep continuity: every phase re-invokes
+its agent as a **fresh context**, and the agent reads its own log before it
+starts. There is no conversation to resume and no session state machine — which
+is also why an interrupted run resumes from these files just as well as an
+uninterrupted one continues.
+
 **Nothing under `.claude/` is ever committed.** What lands in the repository
-permanently is only: source code, `docs/design/<slug>.md` (behavior-only, no
-implementation notes), `docs/design/index.md`, `docs/prd.md`, and ADRs under
-`docs/adr/`. Everything else that a human might want to read afterwards is on
-the Issue or the PR by design — see each plugin's `docs/vcs-minimalism.md`.
+permanently is: source code, the test suite, `docs/manual-tests/<slug>.md` and
+its index, `docs/design/<slug>.md` (behavior-only, no implementation notes),
+`docs/design/index.md`, `docs/prd.md`, and ADRs under `docs/adr/` with their
+index. Everything else that a human might want to read afterwards is on the
+Issue or the PR by design — see each plugin's `docs/vcs-minimalism.md`.
 
 ---
 
@@ -159,12 +179,15 @@ the Issue or the PR by design — see each plugin's `docs/vcs-minimalism.md`.
 2. **The specification is approved before it can be bent** — tests are written
    by a different agent than the one that satisfies them, approved by a human,
    and frozen in a commit. An implementer that can edit the tests is grading
-   its own work.
+   its own work. This applies to manual test procedures exactly as it does to
+   automated ones.
 3. **Minimal footprint in version control** — the *how* is the source code and
    nothing else; the *why* always lands in VCS, routed to a comment, a commit
    message, or an ADR by how expensive it would be to reverse.
 4. **The history is the change, not the work** — send-backs, retries, and
-   review loops happen and are then regrouped away before anything is pushed.
+   review loops happen against an uncommitted working tree, and the whole
+   change becomes commits for the first time at the end. Nothing has to be
+   squashed away because the mess was never a commit.
 5. **No bundled infrastructure** — no plugin-owned MCP servers, no hooks, no
    custom state machine, no tool allowlists (a sandbox is assumed). GitHub via
    `gh`, code/doc search via built-in tools or whatever the consuming project

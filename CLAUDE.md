@@ -7,17 +7,23 @@ This file provides AI agent context for the k1nak0/marketplace repository.
 ## task-splitter Plugin
 
 Interviews the user for requirements, writes a behavior-only design doc, splits
-an epic into PR-sized tasks, confirms the split with the user, and registers
-everything as a GitHub Map Issue plus per-task Issues. Entry point:
-`/task-splitter:task-splitter`.
+an epic into PR-sized tasks, confirms the split with the user, ships the design
+docs as their own PR, and registers everything as a GitHub Map Issue plus
+per-task Issues. Entry point: `/task-splitter:task-splitter` (the orchestrator
+skill lives at `skills/task-splitter/`).
 
 | Phase | Name | Mechanism | Output |
 |-------|------|-----------|--------|
 | 1 | Requirement Understanding | Skill: `understand-requirements` | `requirements-report.md` |
-| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md`, updated `docs/design/index.md` + `docs/prd.md` |
+| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md`, updated `docs/design/index.md` + `docs/prd.md` — left **uncommitted** |
 | 3 | Task Planning | Skill: `plan-tasks` | `task-breakdown-plan.md` (topological order, AC, verification method, implementation sketch) |
-| — | Confirm Gate | Orchestrator inline (`AskUserQuestion`) | go/no-go before Issue creation |
-| 4 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues via `gh` CLI |
+| — | Confirm Gate | Orchestrator inline (`AskUserQuestion`) | go/no-go before anything external |
+| 4 | Design Doc PR | Orchestrator inline | branch `docs/<slug>`, one `docs(...)` commit, PR opened (not merged) |
+| 5 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues via `gh` CLI |
+
+Phases 2 and 4 are split on purpose: the design doc has to exist before the
+breakdown can be derived from it, but nothing should reach git history before
+the confirm gate, since feedback there can send the run back to Phase 2.
 
 See `plugins/task-splitter/skills/*/reference.md` for the behavior/
 implementation boundary, task-grain heuristics, and the Map/Task Issue body
@@ -30,7 +36,8 @@ formats.
 Takes a task off a `task-splitter` Map Issue (or a standalone requirement)
 through user scrutiny, investigation, planning, human-approved test-first
 specification, implementation against frozen tests, review, history cleanup,
-and PR. Entry point: `/implementation-workflow:implementation-workflow`.
+and PR. Entry point: `/implementation-workflow:implementation-workflow` (the
+orchestrator skill lives at `skills/implementation-workflow/`).
 
 | Phase | Name | Mechanism | Output |
 |-------|------|-----------|--------|
@@ -40,25 +47,38 @@ and PR. Entry point: `/implementation-workflow:implementation-workflow`.
 | 4 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
 | 5 | Library Investigation *(conditional)* | Agent: `library-researcher` | `library-usage-report.md` |
 | 6 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md` + CI readiness finding, posted to the Task Issue (or a new standalone tracking Issue) |
-| 7 | Test Authoring | Agent: `test-writer` | test files (+ scaffolding, + CI if absent) and `test-manifest.json` |
-| 8 | Test Review Gate & Freeze | Orchestrator inline | human approves the tests → committed locally as one `test(...)` commit; that SHA is the freeze point |
-| 9 | Implementation | Agent: `implementer` *(resumable this session)* | source changes, `why-notes.md`, any ADR; **cannot modify tests** — escalates via `test-dispute.md` |
+| 7 | Test Authoring | Agent: `test-writer` | automated tests, `docs/manual-tests/<slug>.md`, scaffolding, CI if absent, `test-manifest.json` |
+| 8 | Test Review Gate & Freeze | Orchestrator inline | human approves the specification → committed locally as one `test(...)` commit; that SHA is the freeze point |
+| 9 | Implementation | Agent: `implementer` | **uncommitted** source changes, `why-notes.md`, any ADR; **cannot modify tests of either kind** — escalates via `test-dispute.md`; runs no `git` |
 | 10 | Automated Review | Agent: `code-reviewer` | `review-report.md`; verifies the test freeze mechanically before anything else; loops back to Phase 9 on FAIL, up to 5 attempts |
 | 11 | Human Review Gate | Orchestrator inline | `approve` or `request-changes` via `AskUserQuestion`; any ADR is reviewed here too |
-| 12 | History Cleanup & Persistence | Agent: `persistence-engineer` | regroups the branch into `test` + implementation commits, finalises draft ADRs, pushes (`--force-with-lease` only after a rewrite), opens/updates the PR |
+| 12 | History Cleanup & Persistence | Agent: `persistence-engineer` | commits the working tree as `test` + implementation commits, finalises this run's draft ADRs, pushes (`--force-with-lease` only after a rewrite), opens/updates the PR, fills the Map Issue row's `PR` cell |
 | 13 | Map Issue Update | Orchestrator inline | `map-issue`: flips the row to `done`, closes the Task Issue. `standalone`: closes the tracking Issue Phase 6 created. Phases 9/10 flip the row to `blocked` instead on an unresolved halt (`map-issue` only) |
+
+**Two invariants that shape most of the file contracts.** First, *the
+implementation is never committed before Phase 12* — the implementer runs no
+`git`, so review loops and send-backs happen against a working tree and there
+is no messy history to squash. The cost is that Phase 12 must build the series
+from `modified-files.json` and verify it against a `git write-tree` snapshot
+(not against `HEAD`, which doesn't contain the work), and must never
+`git reset --hard`. Second, *there is no agent conversation resume*: every
+`Agent(...)` call is a fresh context, and `test-writer` / `implementer` carry
+continuity in `test-authoring-log.md` / `implementation-log.md`, which they
+read first and append to last.
 
 Shared premises all file-writing agents read first live in
 `plugins/implementation-workflow/docs/`: `vcs-minimalism.md` (what may land in
-VCS, the *why* routing, ADR rules), `git-workflow.md` (branching, commit shape,
-the soft-reset regroup, push policy), `test-first.md` (the
-`test-writer`/`implementer` contract and how the freeze is verified). The
+VCS, the *why* routing, ADR rules and the two acceptance paths),
+`git-workflow.md` (branching, commit shape, where the implementation gets
+committed, the soft-reset regroup, push policy), `test-first.md` (the
+`test-writer`/`implementer` contract, the two kinds of test, and how the freeze
+is verified). The
 orchestrator resolves that directory once at Step 0 and passes it into every
 agent prompt.
 
 See `plugins/implementation-workflow/skills/*/reference.md` and `agents/*.md`
-for test-strategy inference, the scrutiny checklist, the review-loop cap, and
-the PR body contract.
+for per-criterion automated/manual routing, the scrutiny checklist, the
+review-loop cap, and the PR body contract.
 
 Standalone skill (outside the thirteen-phase pipeline): `onboarding`
 (`/implementation-workflow:onboarding`) — verifies `gh` CLI/GitHub-remote
@@ -87,24 +107,43 @@ manifest-file auto-detection heuristics.
   `status.json` state machine. Cross-phase handoff is plain markdown files
   under `.claude/task-splitter/<task-id>/` or
   `.claude/implementation-workflow/<task-id>/`. Orchestrators use the
-  harness's own `TaskCreate`/`TaskUpdate` for in-session progress tracking. If
-  a session is interrupted, resuming is manual: tell the orchestrator which
-  task directory to continue, and it infers what's done from which files
-  already exist there.
+  harness's own `TaskCreate`/`TaskUpdate` for in-session progress tracking.
+  Agents are likewise never "resumed": each invocation is a fresh context that
+  reads its own append-only log from the task directory. If a session is
+  interrupted, resuming is manual: tell the orchestrator which task directory
+  to continue, and it infers what's done from which files already exist there —
+  with the one exception that uncommitted implementation work does not survive
+  a restart.
 - **VCS minimalism.** The *how* is carried by source code alone — plans,
-  reports, verification procedures, and implementation narrative go to Issues
-  and PR bodies, never to a committed file. The *why* always goes into VCS, in
+  reports, review findings, and implementation narrative go to Issues and PR
+  bodies, never to a committed file. The *why* always goes into VCS, in
   one of three places: a source comment (reasoning local to one file), the
   commit message body (reasoning spanning several), or an ADR (any decision a
   human would need half a day or more to reverse). Each plugin carries its own
   copy of this policy at `plugins/<plugin>/docs/vcs-minimalism.md` because
   plugins install independently — **change one, change both.**
 - **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
-  Context / Decision / Consequences / Alternatives Considered). Standard
-  lifecycle: written as `draft`, flipped to `accepted` when the change ships;
+  Context / Decision / Consequences / Alternatives Considered) plus
+  `docs/adr/index.md`, updated in the same commit as the ADR it describes.
+  Lifecycle: written as `draft`, flipped to `accepted` when the change ships;
   once out of `draft`, `Decision` and `Context` are immutable and a change of
-  mind means a new superseding ADR. `docs/decision-records/` and
-  `docs/incident-logs/` are frozen historical reference; no new entries.
+  mind means a new superseding ADR. **Two acceptance paths:** an ADR from
+  `implementer` (Phase 9) is flipped by `persistence-engineer` at Phase 12
+  after the review gate — and only ADRs from *this run*, never someone else's
+  draft. An ADR from `issue-refinement` (Phase 2) is written `accepted`
+  directly, because its doc PR *is* the change that ships the decision and has
+  no later gate; the same holds for a `task-splitter` Phase 4 ADR.
+  `docs/decision-records/` and `docs/incident-logs/` are frozen historical
+  reference; no new entries.
+- **`docs/manual-tests/`** holds one committed procedure per feature area
+  (`<slug>.md`), indexed by `docs/manual-tests/index.md`, which the consuming
+  project's `README.md` links to. An automated test is an executable statement
+  of behaviour; a manual test is a non-executable one, for behaviour a runner
+  can't check. Both are *what*, not *how*, so both are committed; both are
+  frozen in the same `test(...)` commit at Phase 8; the implementer may edit
+  neither. The **record of one execution** is not committed — that's a run log
+  and goes to the PR body and the Issue. There is therefore **always** a test
+  commit, including for a task whose specification is entirely manual.
 - **`docs/design/`** holds one behavior-only doc per feature — observable
   inputs/outputs, interfaces, constraints, state transitions. No language,
   library, algorithm, or file-layout detail. **No `## Implementation Notes`
