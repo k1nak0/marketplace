@@ -5,12 +5,9 @@ behavior specs) and [`docs/prd.md`](prd.md) (product goals and scope). They are
 written and updated by the `task-splitter` and `implementation-workflow`
 plugins.
 
-Architecture decisions live in [`docs/adr/`](adr/index.md) — one numbered ADR
-per decision that would take a human half a day or more to reverse. Lighter
-rationale lives in source comments (when it's local to one file) or in commit
-message bodies (when it spans several); implementation narrative lives in the
-PR that shipped it. See each plugin's `docs/vcs-minimalism.md` for the full
-rule.
+Architecture decisions live in [`docs/adr/`](adr/index.md); its index states
+the bar for what earns an ADR and where lighter rationale goes instead.
+Implementation narrative lives in the PR that shipped it, never here.
 
 The decision records and incident logs below predate all of that and are kept
 as historical reference only — no new entries are added to these two

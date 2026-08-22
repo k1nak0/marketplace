@@ -55,14 +55,10 @@ also works from a standalone requirement description.
   and linked from your `README.md` — both are frozen at the same gate, and
   neither is the implementer's to edit. What *isn't* committed is the record of
   one execution; that goes to the PR.
-- **Minimal footprint in version control.** Source code carries the *how*;
-  plans, reports, and narrative live on the Issue and the PR. The *why* always
-  lands in VCS — a source comment, a commit message, or an ADR under
-  `docs/adr/` when reversing the decision would cost a human half a day.
-- **Clean history.** Send-backs are expected and none of them survive. The
-  implementation stays uncommitted until the end, then becomes a test commit
-  plus implementation commits in one go — so there's no "fix review comment"
-  commit to squash, because it was never a commit.
+
+The other two things that make it distinctive — what lands in version control,
+and what the history looks like when it does — are shared with `task-splitter`
+and covered under Design Principles below.
 
 ---
 
@@ -179,8 +175,7 @@ Issue or the PR by design — see each plugin's `docs/vcs-minimalism.md`.
 2. **The specification is approved before it can be bent** — tests are written
    by a different agent than the one that satisfies them, approved by a human,
    and frozen in a commit. An implementer that can edit the tests is grading
-   its own work. This applies to manual test procedures exactly as it does to
-   automated ones.
+   its own work.
 3. **Minimal footprint in version control** — the *how* is the source code and
    nothing else; the *why* always lands in VCS, routed to a comment, a commit
    message, or an ADR by how expensive it would be to reverse.

@@ -70,10 +70,9 @@ procedure, when, and what they saw on this change. That is a run log, it is
   narrative: `README.md` tells a user how to *operate* the project, and
   `CLAUDE.md` is the interface contract an agent needs before touching the
   repo. Update them when the change actually affects what they state.
-- **`docs/manual-tests/` is committed**, indexed by
-  `docs/manual-tests/index.md`, which `README.md` links to. It exists so the
-  next person can find and re-run the checks, which is exactly what an Issue
-  comment cannot offer.
+- **`docs/manual-tests/` is committed**, indexed and linked from `README.md`
+  so the next person can find and re-run the checks — exactly what an Issue
+  comment cannot offer. Layout and lifecycle: `test-first.md`.
 - **`.claude/implementation-workflow/<task-id>/` is never committed.** It's a
   scratch workspace for this run. Never stage anything under `.claude/`.
 

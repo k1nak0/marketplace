@@ -62,6 +62,13 @@ production code beyond signature-only scaffolding.
 steps. Cannot modify either; escalates via `test-dispute.md` instead. **Runs no
 `git` commands** — its work stays in the working tree until Phase 12.
 
+**`code-reviewer`** — fresh context, no access to the implementer's history.
+Verifies the test freeze before reviewing anything else. FAIL on any
+Critical/Major finding.
+
+**`persistence-engineer`** — regroups the history, finalises ADRs, pushes,
+opens the PR. Does not touch documentation content.
+
 ### How agents are re-invoked
 
 There is **no conversation resume**. Every `Agent(...)` call starts a fresh
@@ -79,19 +86,12 @@ feedback and the workspace path; the log carries the rest. Do not try to
 summarise the previous round into the prompt — the log is more complete than
 your summary would be, and it's the agent's own words.
 
-**`code-reviewer`** — fresh context, no access to the implementer's history.
-Verifies the test freeze before reviewing anything else. FAIL on any
-Critical/Major finding.
-
-**`persistence-engineer`** — regroups the history, finalises ADRs, pushes,
-opens the PR. Does not touch documentation content.
-
 ---
 
 ## Step 0 — Resolve the Shared Policy Docs
 
-Every file-writing agent in this plugin is bound by three shared documents.
-Resolve their location once and pass it into every agent prompt:
+Every file-writing agent in this plugin is bound by the shared documents in
+`docs/`. Resolve their location once and pass it into every agent prompt:
 
 ```bash
 ls "${CLAUDE_PLUGIN_ROOT}/docs/" 2>/dev/null && echo "POLICY_DOCS=${CLAUDE_PLUGIN_ROOT}/docs"
@@ -102,8 +102,11 @@ and use its parent directory. Record the result as `POLICY_DOCS`. Every
 `Agent(...)` prompt below includes the line:
 
 ```
-Policy docs: <POLICY_DOCS>/  (vcs-minimalism.md, git-workflow.md, test-first.md)
+Policy docs: <POLICY_DOCS>/  (vcs-minimalism.md, git-workflow.md, test-first.md, map-issue.md)
 ```
+
+`map-issue.md` is also yours: every Map Issue read or edit you make inline —
+Phases 1, 9, 10 and 13 — follows it.
 
 ## Step 0b — Check for `docs/tool.md`
 
@@ -191,11 +194,9 @@ git fetch origin "$BASE"
 git switch --create "<type>/<issue#>-<slug>" "origin/$BASE"
 ```
 
-The `:!.claude` exclusion is required, not optional: Phase 1 created this run's
-own scratch workspace under `.claude/implementation-workflow/<TASK_ID>/`, and
-in a project whose `.gitignore` doesn't cover `.claude/` those files are
-untracked. Without the exclusion this check would trip over the pipeline's own
-working files every time.
+The `:!.claude` exclusion is required, not optional — without it the check
+trips over this run's own scratch workspace every time
+(`<POLICY_DOCS>/git-workflow.md` §1).
 
 - `<type>` is the Conventional Commits type this change will land as; `<slug>`
   is 3–5 kebab-case words from the Task Issue title; `<issue#>` is the Task
@@ -317,8 +318,7 @@ Write that SHA into `test-manifest.json`'s `test_commit`. **Local commit only
 
 There is always a test commit, including for a task whose specification is
 entirely manual — that commit carries `docs/manual-tests/<slug>.md`, its index
-row, and the `README.md` link. A committed procedure is what lets the next
-person re-run these checks; that's why it isn't an Issue comment.
+row, and the `README.md` link.
 
 ### Phase 9 — Implementation
 
@@ -351,8 +351,8 @@ wrong. Show the user the dispute in full alongside the test it concerns, and
   instruction to implement against the tests as written.
 
 **If `blocked-report.md` was written:** if `source_type == map-issue`, flip
-this task's row in the Map Issue to `blocked` (same `gh issue edit` pattern as
-Phase 13) so another run doesn't pick it up as ready. Surface the report and
+this task's row in the Map Issue to `blocked` (`<POLICY_DOCS>/map-issue.md`) so
+another run doesn't pick it up as ready. Surface the report and
 ask whether to retry with adjusted constraints or go back to Phase 6. If the
 user retries, flip the row back to `in-progress` first.
 
@@ -497,24 +497,14 @@ gh issue close <TRACKING_ISSUE_NUMBER> --comment "Implemented in <PR URL>."
 
 Print the final summary and stop.
 
-**If `source_type == map-issue`:**
+**If `source_type == map-issue`:** flip this task's row's **Status** cell to
+`done` and put the PR URL in its **PR** cell (Phase 12 usually filled that in
+already — verify it, don't duplicate it), using the whole-body-rewrite pattern
+in `<POLICY_DOCS>/map-issue.md`. Then check whether any other row's
+dependencies are now all `done`, and call those out as newly-unblocked in your
+summary.
 
 ```bash
-gh issue view <map-issue-number> --json body
-```
-
-Flip this task's row's **Status** cell to `done` and put the PR URL in its
-**PR** cell (Phase 12 usually filled that in already — verify it, don't
-duplicate it). Then check whether any other row's dependencies are now all
-`done`, and call those out as newly-unblocked in your summary.
-
-If the table predates the `PR` column, add the column — header, separator, and
-an empty cell on every other row — rather than dropping the URL into Notes.
-
-```bash
-gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
-<updated body>
-MAP_BODY
 gh issue close <TRACKING_ISSUE_NUMBER> --comment "Implemented in <PR URL>."
 ```
 
@@ -543,11 +533,9 @@ infer the position from what's on disk and in git:
 | Working tree dirty (the implementation), no `review-report.md` | Phase 10 |
 | `review-report.md` says PASS | Phase 11 |
 
-Nothing here depends on an agent's memory, because nothing ever did: agents are
-re-invoked fresh even mid-session, and their continuity lives in
-`test-authoring-log.md` and `implementation-log.md`. Those files survive a
-restart, so a resumed run picks up where it left off with the same context the
-in-session rounds had.
+None of this depends on an agent's memory, because nothing ever did: the logs
+under "How agents are re-invoked" survive a restart, so a resumed run has the
+same context an in-session round would.
 
 The one thing that does **not** survive a restart is uncommitted work — the
 implementation is not in any commit until Phase 12. If the working tree is

@@ -1,26 +1,10 @@
 # Requirement Understanding — Extended Reference
 
-## Map Issue Parsing
+## Choosing Among the Ready Tasks
 
-The Map Issue body follows task-splitter's template — a markdown table under
-"## Task Graph (topological order)":
-
-```
-| # | Task | Issue | Depends on | Status |
-|---|------|-------|-----------|--------|
-| 1 | Add X | #123 | - | done |
-| 2 | Add Y | #124 | #123 | not-started |
-```
-
-Parse each row into `{index, title, issue_number, depends_on: [issue_numbers],
-status}`. `Depends on: -` means no dependencies. `Depends on` may list
-multiple issue numbers comma-separated.
-
-A task is **ready** when `status == "not-started"` and every issue number in
-`depends_on` has `status == "done"` in the same table. Tasks with status
-`in-progress` or `blocked` are never ready (in-progress likely means another
-session/agent already has it; surface that possibility to the user rather than
-silently picking a different task).
+Parse the Task Graph and compute the ready set per
+[../../docs/map-issue.md](../../docs/map-issue.md) §1, which defines the table
+shape, the status vocabulary, and what makes a row **ready**.
 
 Even when exactly one task is ready, the choice still goes to the user via
 `AskUserQuestion`. Present the ready ones as the options, and mention the
@@ -70,24 +54,11 @@ the user to click through it.
 ## Claiming the Selected Task
 
 After the user approves the content at the scrutiny gate (Step 3 in SKILL.md),
-flip its row's status to `in-progress`:
-
-```bash
-gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
-<same body, with the selected row's Status cell changed to in-progress>
-MAP_BODY
-```
-
-Same `gh issue edit`-a-markdown-table pattern the orchestrator's final phase
-uses to flip a row to `done` — no new mechanism. It's best-effort: two sessions
-reading the Map Issue within the same few seconds could both see `not-started`
-and both claim it. That's an acceptable gap given this plugin's "no custom
-state machine" design.
-
-If the orchestrator later halts this task (`blocked-report.md`, an unresolved
-test dispute, or the review-fix loop exceeding its cap), it flips the row from
-`in-progress` to `blocked` rather than leaving it `in-progress` forever or
-silently reverting it to `not-started`.
+flip the selected row's Status cell from `not-started` to `in-progress`, using
+the whole-body-rewrite pattern in
+[../../docs/map-issue.md](../../docs/map-issue.md) §3. That document's §2 also
+covers why the claim is best-effort rather than a lock, and what happens to the
+row if the run later halts.
 
 ## Converting a Task Issue Body into requirements-report.md
 

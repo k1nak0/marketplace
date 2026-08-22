@@ -24,6 +24,8 @@ Two failure modes to avoid, in order of cost:
 
 - Discussion structure, propagation rules, and the doc-PR shape:
   [reference.md](reference.md)
+- The Map Issue's table contract and how to edit an Issue body:
+  [../../docs/map-issue.md](../../docs/map-issue.md)
 - What may be written to the repository at all:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 - Branch and PR mechanics: [../../docs/git-workflow.md](../../docs/git-workflow.md)

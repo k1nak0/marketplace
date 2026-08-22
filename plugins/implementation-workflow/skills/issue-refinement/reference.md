@@ -56,8 +56,10 @@ too. Flag it to the user — it may be in scope, or it may deserve its own task.
 
 ## Map Issue Table Rules
 
-The graph is the pipeline's source of truth for what's next, so keep it
-mechanically valid:
+The table shape, the status vocabulary, the whole-body-rewrite mechanics, and
+the rule that every meaning-changing body edit is accompanied by a comment are
+all in [../../docs/map-issue.md](../../docs/map-issue.md). This phase is the
+only one that reshapes the graph itself, so three rules are specific to it:
 
 - **Splitting a row:** create the new Task Issues first (task-splitter's Task
   Issue template — Description / Acceptance Criteria / Verification Method /
@@ -69,29 +71,10 @@ mechanically valid:
   table's order is meant to be a valid execution order.
 - **Dropping a row:** close the Issue with a comment naming the decision that
   obsoleted it, and set its status cell to `dropped` rather than deleting the
-  row — a reader tracing a "Depends on: #124" needs to find #124.
-- **Statuses** stay in the existing vocabulary, which is the one declared in
-  the Map Issue template: `not-started`, `in-progress`, `blocked`, `done`,
-  `dropped`.
-- **The `PR` column** is written by `implementation-workflow`, not here. Leave
-  existing cells alone; give a new row an empty one.
+  row.
 
-Edit the table with the same whole-body-rewrite pattern the rest of the plugin
-uses:
-
-```bash
-gh issue view <map-issue-number> --json body -q .body    # read it, edit it, write it back
-gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
-<full updated body>
-MAP_BODY
-```
-
-Heredoc rather than a temp file, and `--body-file -` rather than
-`--body "<string>"` — markdown tables and code fences do not survive shell
-escaping intact.
-
-Rewriting an Issue body loses the old text, so **every body edit is
-accompanied by a comment** recording what changed and why:
+Leave the `PR` column alone — it belongs to Phase 12 — and give a new row an
+empty cell. Your accompanying comment should name this phase as the cause:
 
 ```bash
 gh issue comment <n> --body-file - <<'C'

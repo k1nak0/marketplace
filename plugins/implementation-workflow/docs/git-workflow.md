@@ -39,12 +39,11 @@ git status --porcelain -- . ':!.claude'   # must be empty
 ```
 
 If it isn't, stop and surface it — do not stash, commit, or discard someone
-else's work in progress.
-
-Exclude `.claude` from every cleanliness check. The run's own scratch workspace
-lives under `.claude/implementation-workflow/<task-id>/` and is untracked in
-any project that doesn't gitignore `.claude/`; a bare `git status --porcelain`
-would report the pipeline's own handoff files as a dirty tree.
+else's work in progress. The `:!.claude` exclusion belongs on **every**
+cleanliness check in this pipeline: the run's own scratch workspace lives under
+`.claude/implementation-workflow/<task-id>/` and is untracked in any project
+that doesn't gitignore `.claude/`, so a bare `git status --porcelain` would
+report the pipeline's own handoff files as a dirty tree.
 
 ### The design-doc branch is separate
 
@@ -107,6 +106,12 @@ That is deliberate: nothing has to be squashed, reworded, or rebased away,
 because the messy intermediate states were never commits to begin with. It
 costs one thing — an interrupted session loses uncommitted work — and the
 freeze point is unaffected, because the tests *are* committed.
+
+The test commit itself is created the moment the human approves the tests at
+Phase 8, and it is **local only** — nothing is pushed until the change has
+cleared the human review gate and the history has been regrouped. The approved
+tests are safe from a later rewrite either way: they are in a commit, in the
+reflog, and in the recorded recovery SHA.
 
 Two consequences you have to hold on to:
 
@@ -198,14 +203,5 @@ git push --force-with-lease origin HEAD    # after any rewrite of a pushed branc
 - If a push is rejected for a reason other than the lease (auth, protected
   branch, network), surface the error and stop. Do not retry with `--force`.
 
-## 6. Where the test commit sits in time
-
-The test commit is created the moment the human approves the tests — it is a
-**local commit only**. Nothing is pushed until the whole change has cleared
-the human review gate and the history has been regrouped. That keeps the
-approved tests safe from being lost to a later rewrite (they're in the reflog
-and in the recorded recovery SHA) without publishing a branch that will need
-rewriting three times before anyone should look at it.
-
-Once the PR is open and the reviewer sends the change back, the same regroup
+Once the PR is open and a reviewer sends the change back, the same regroup
 applies, followed by `--force-with-lease`.

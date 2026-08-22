@@ -27,17 +27,6 @@ codebase investigation" is a valid value.>
 
 ---
 
-### Task 2: <Title>
-
-**Depends on:** Task 1
-**Verification Method:** automated | manual | mixed
-**Design reference:** docs/design/<slug>.md#<anchor>
-
-**Description**
-...
-
-**Acceptance Criteria**
-- [ ] AC-1: ...
-
-**Implementation Sketch**
-...
+<!-- Repeat the block above once per task, in topological order, separated by
+     `---`. **Depends on:** names the earlier tasks by number ("Task 1",
+     "Tasks 1 and 3") or "none". -->
