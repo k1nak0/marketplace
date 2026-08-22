@@ -34,7 +34,7 @@ reads or writes that field until the next task — merge them.
 |---|---|---|
 | Written before or after codebase investigation | Before | After |
 | Detail level | Sketch: rough approach, likely files | Concrete: exact files, symbols, test cases |
-| Audience | Human confirming the split; register-tasks | feature-developer |
+| Audience | Human confirming the split; register-tasks | implementation-workflow's planner and test-writer |
 | Authoritative? | No — a best guess at split time | Yes — the actual spec for implementation |
 
 Don't over-invest in the Implementation Sketch field. If codebase
@@ -46,7 +46,7 @@ it's `implementation-workflow`'s job to correct it, not this skill's.
 - `automated`: the acceptance criteria can be checked by a test suite.
 - `manual`: requires human judgement, visual inspection, or a live external
   system (matches the `manual` branch of `implementation-workflow`'s
-  `feature-developer`).
+  `implementation-workflow`).
 
 When unsure, default to `manual` and let `implementation-planning` (Phase 4 of
 implementation-workflow) firm it up once the codebase context is available.

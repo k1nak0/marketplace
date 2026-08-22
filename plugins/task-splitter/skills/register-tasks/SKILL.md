@@ -2,7 +2,6 @@
 name: register-tasks
 description: Register a confirmed task breakdown as a GitHub Map Issue plus per-task Issues, using the gh CLI. Use for Phase 4 of task-splitter, after the user has confirmed the task-breakdown-plan.md produced by plan-tasks.
 model: sonnet
-allowed-tools: Read, Write, Bash
 user-invocable: false
 ---
 

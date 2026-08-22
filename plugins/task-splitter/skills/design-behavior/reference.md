@@ -35,13 +35,31 @@ stale documentation the moment the first implementation detail changes.
 | "Add a `validateEmail()` function in `utils/validation.ts`" | Names a file/function | "Email input is validated before submission; invalid input blocks submission with an inline error" |
 | "Use a binary search over the sorted list" | Names an algorithm | "Lookup returns in O(log n) for large inputs" — only include if the requirement actually specifies a performance bound; otherwise omit entirely |
 
-## `## Implementation Notes` Section
+## There Is No `## Implementation Notes` Section
 
-Every design doc gets this section, left empty at creation. It's the
-consolidation point for what used to be separate ADRs and incident logs: once
-`implementation-workflow`'s `feature-developer` builds the feature, it appends
-technical decisions, snags hit, and lessons learned here — clearly separated
-from the behavior-only body above it.
+Design docs used to carry one, left empty at creation and appended to during
+implementation with technical decisions, snags, and lessons. **That section is
+gone and is not to be re-added.**
+
+It was a *how* document living in version control, which is exactly what
+`../../docs/vcs-minimalism.md` rules out: it duplicated what the source code
+already said, and it went stale the moment the implementation moved. Worse, it
+sat inside the one file whose value depends on being a stable behaviour
+contract — so the doc that was supposed to survive reimplementation was
+accumulating the details of one particular implementation.
+
+Where that content goes now:
+
+| Content | Destination |
+|---|---|
+| How the feature was built, structure, flow | The PR body |
+| A snag hit and worked around, local to one file | A source comment at that spot |
+| Rationale spanning several files | The commit message body |
+| A decision that would take a human half a day to reverse | An ADR under `docs/adr/` |
+
+If a design doc's behaviour body turns out to be contradicted by what was
+built, that's escalated to a human — the doc and the implementation disagreeing
+is a real problem, not a documentation-maintenance chore.
 
 ## Conflict Detection
 
