@@ -158,5 +158,10 @@ manifest-file auto-detection heuristics.
   sandboxed environment. Restrictions that are *behavioural* rather than
   mechanical are still stated as rules (the implementer not touching frozen
   tests, investigation agents not editing source).
+- **Markdown link integrity is CI-enforced.** `.github/workflows/markdown-link-check.yml`
+  runs `lychee` (config: `lychee.toml`) on any push/PR touching a `*.md` file,
+  so a broken relative reference between `SKILL.md`/`reference.md`/templates,
+  or into `docs/`, fails the build. Skills and agents that link to sibling
+  docs don't need to manually re-verify those references stay valid.
 - Subagent return values are chosen per phase for what's actually useful to
   the caller — not a fixed "summary only" rule.
