@@ -9,7 +9,7 @@
       "name": "task-splitter",
       "source": "./plugins/task-splitter",
       "description": "Interviews the user for requirements, writes a behavior-only design doc, splits the work into PR-sized tasks with dependencies, and registers them as a GitHub Map Issue plus per-task Issues.",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "author": {
         "name": "dango"
       }
@@ -17,8 +17,8 @@
     {
       "name": "implementation-workflow",
       "source": "./plugins/implementation-workflow",
-      "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement doc) through codebase investigation, planning, TDD implementation, automated review, human review, and commit/PR persistence.",
-      "version": "2.0.0",
+      "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, human-approved test-first specification, implementation against frozen tests, automated and human review, history cleanup, and PR.",
+      "version": "3.0.0",
       "author": {
         "name": "dango"
       }

@@ -1,12 +1,20 @@
 # Implementation Plan
 
 **Task ID:** <task-id>
-**Phase:** 4 — Implementation Planning
+**Phase:** 6 — Implementation Planning
 **Source:** map-issue (#<task-issue>) | standalone
+**Design doc:** docs/design/<slug>.md | none
 
 ## Background & Goal
 
-<Purpose and scope. What problem does this solve? What's the success condition?>
+<Purpose and scope. What problem does this solve, what's the success condition?
+Note any discrepancy between task-splitter's Implementation Sketch and what
+codebase investigation actually found.>
+
+**Decisions likely to need an ADR:** <Any decision here that would take a human
+half a day or more to reverse — a persisted data shape, a public interface, a
+new dependency, a concurrency model, a security boundary. "None expected" is a
+valid and useful answer.>
 
 ## Technical Specification
 
@@ -31,10 +39,16 @@
 ## Test Strategy
 
 **Test Strategy:** automated | manual
+**Why:** <One line. What made this the right call — and, if manual, why an
+automated test genuinely cannot express the behaviour.>
+
+**CI:** present | extend (`<file>`, `<what's missing>`) | bootstrap (`<test command>`)
 
 ### If automated — Test Cases
-All tests written BEFORE implementation code (Red → Green). Only unit tests
-(no I/O, no integration/e2e) are in-scope.
+
+Written and human-approved BEFORE any implementation exists, then committed and
+frozen. Only unit-level tests (no live I/O, no integration/e2e) are in scope.
+Describe behaviour, not units.
 
 | Test ID | Description | Input | Expected Output | Out-of-Scope? |
 |---------|-------------|-------|-----------------|---------------|
@@ -44,13 +58,18 @@ All tests written BEFORE implementation code (Red → Green). Only unit tests
 ```
 
 ### If manual — Verification Steps
-<Numbered steps a human or feature-developer follows. Name any docs/tool.md
-tool needed (e.g. "use the Playwright MCP to check X").>
+
+<Numbered steps, each with an action and the exact observation that
+constitutes a pass. Name any docs/tool.md tool a step needs. This procedure is
+approved at the Phase 8 gate, posted to the Issue, and executed verbatim by
+the implementer — it is never committed.>
 
 ## Documentation Update Plan
 
-<Which of CLAUDE.md / README.md / docs/design/<slug>.md#Implementation-Notes
-need updates, and what they should say.>
+<Only CLAUDE.md and README.md, and only where the change affects what they
+state. Name the section and what it should say. "No documentation update
+expected" is a valid entry. docs/design/<slug>.md is deliberately absent from
+this list — see docs/vcs-minimalism.md.>
 
 ## Out-of-Scope
 

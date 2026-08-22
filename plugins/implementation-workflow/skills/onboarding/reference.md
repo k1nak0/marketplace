@@ -15,9 +15,10 @@ commands. Multiple may apply in a polyglot repo — propose all that match.
 | `Gemfile` with rspec | `bundle exec rspec` | `bundle exec rubocop` if configured |
 
 If nothing matches, ask the user directly rather than leaving the section
-blank without asking — an empty Test Command silently degrades
-`feature-developer`'s Red→Green loop to "no automated verification," which
-should be a deliberate choice, not a default from a missed detection.
+blank without asking — an empty Test Command silently degrades `test-writer`'s
+red-confirmation step, and with it the whole test-first gate, to "no automated
+verification". That should be a deliberate choice, not a default that falls out
+of a missed detection.
 
 ## What NOT to Auto-Fill
 

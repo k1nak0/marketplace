@@ -2,7 +2,6 @@
 name: plan-tasks
 description: Decompose a design doc into PR-sized tasks with a dependency graph, acceptance criteria, verification method, and a brief implementation sketch per task. Writes task-breakdown-plan.md. Use for Phase 3 of task-splitter, after design-behavior has written the design doc.
 model: sonnet
-allowed-tools: Glob, Grep, Read, Write
 user-invocable: false
 ---
 

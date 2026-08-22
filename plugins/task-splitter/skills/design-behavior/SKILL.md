@@ -2,7 +2,6 @@
 name: design-behavior
 description: Turn a requirements report into a behavior-only design doc under docs/design/, updating docs/design/index.md and merging into docs/prd.md. Reads existing design docs to flag (not auto-resolve) conflicts. Use for Phase 2 of task-splitter, after understand-requirements has written requirements-report.md.
 model: sonnet
-allowed-tools: Glob, Grep, Read, Write, Edit, ToolSearch
 user-invocable: false
 ---
 
@@ -17,6 +16,9 @@ both depend on being stable.
 ## Quick Reference
 
 - For the behavior/implementation boundary and NG examples, see [reference.md](reference.md)
+- For what may be written to the repository at all — and why this doc has no
+  `## Implementation Notes` section — see
+  [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 
 ---
 
@@ -72,11 +74,14 @@ whatever's externally visible. No implementation detail.>
 
 ## State Transitions
 <If applicable: states the feature/entity can be in and what causes transitions.>
-
-## Implementation Notes
-<!-- Left empty here. implementation-workflow's feature-developer appends
-     technical decisions, snags, and learnings here during implementation. -->
 ```
+
+**The doc ends there.** Do not add an `## Implementation Notes` section, or any
+other section for technical decisions, snags, or learnings — that content is
+*how*, and it belongs to the PR and the Issue, not to the repository (see
+[../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)). A design doc
+that accumulates implementation detail stops being a stable contract, which is
+the one thing it exists to be.
 
 ### Step 5 — Update the Index and PRD
 

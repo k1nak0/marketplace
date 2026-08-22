@@ -1,6 +1,6 @@
 {
   "name": "task-splitter",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Interviews the user for requirements, writes a behavior-only design doc, splits the work into PR-sized tasks with dependencies, and registers them as a GitHub Map Issue plus per-task Issues.",
   "author": {
     "name": "k1nak0"
@@ -12,6 +12,7 @@
     "workflow",
     "requirements",
     "task-planning",
+    "adr",
     "github-issues"
   ],
   "skills": [

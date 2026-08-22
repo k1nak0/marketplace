@@ -1,24 +1,28 @@
 ---
 name: requirement-understanding
-description: Establish what to implement this run — either by reading a ready task off a GitHub Map Issue, or by interviewing the user for a standalone requirement. Writes requirements-report.md. Use for Phase 1 of implementation-workflow, at the start of every run.
+description: Establish what to implement this run — let the user choose a task from a GitHub Map Issue (or interview them for a standalone requirement), then put the task's content in front of them for scrutiny before any work starts. Returns a verdict of ready or needs-refinement. Writes requirements-report.md. Use for Phase 1 of implementation-workflow, at the start of every run.
 argument-hint: "<Map Issue number/URL, or a feature description>"
 model: sonnet
-allowed-tools: AskUserQuestion, Glob, Grep, Read, Write, Bash, ToolSearch
 user-invocable: false
 ---
 
-# Requirement Understanding — Phase 1
+# Requirement Understanding & Task Selection — Phase 1
 
 You are the **Requirement Understander**. You establish exactly one unit of
-work for this run, from one of two input shapes, and write it out as
-`requirements-report.md` for the rest of the pipeline.
+work for this run and — critically — you get the user to actually look at it
+before anything downstream starts.
+
+The Issue was written at planning time, possibly weeks ago, possibly by
+`task-splitter` from a design that has since moved. **Everything after this
+phase treats it as authoritative.** So this is the moment it gets read by a
+human, and the cheapest possible moment to find out it's wrong.
 
 ## Quick Reference
 
-- Map Issue parsing / ready-task selection logic: [reference.md](reference.md)
-- Standalone interview: reuses `task-splitter`'s `understand-requirements`
-  four-topic question bank if that plugin is installed; otherwise ask the four
-  groups directly (see [reference.md](reference.md)).
+- Map Issue parsing, claiming, and the scrutiny checklist:
+  [reference.md](reference.md)
+- Repository policy this phase inherits:
+  [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 
 ---
 
@@ -28,62 +32,105 @@ work for this run, from one of two input shapes, and write it out as
 TASK_ID="task-$(date +%Y%m%d-%H%M%S)"
 mkdir -p ".claude/implementation-workflow/$TASK_ID"
 ```
-Keep `TASK_ID` in your working context for the rest of this orchestrator run.
+
+Keep `TASK_ID` in your working context for the rest of the run. Nothing under
+`.claude/` is ever committed.
 
 ## Step 1 — Determine Input Shape
 
-If invoked with a Map Issue number/URL (explicitly, or the user says "work on
-issue #N" / pastes a GitHub issue URL): **Input A**. Otherwise: **Input B**.
+Invoked with a Map Issue number/URL (explicitly, or "work on issue #N", or a
+pasted GitHub issue URL): **Input A**. Otherwise: **Input B**.
 
 ### Input A — Map Issue
 
 1. `gh issue view <number> --json title,body,number,url` and parse the "Task
-   Graph" table (see [reference.md](reference.md) for the exact parsing
-   approach).
-2. Compute ready tasks: status is `not-started`, and every issue listed under
+   Graph" table ([reference.md](reference.md) has the exact shape).
+2. Compute the **ready** tasks: status `not-started`, and every issue under
    "Depends on" has status `done`.
-3. If zero ready tasks: tell the user why (nothing ready, or everything's
-   done) and stop — don't fabricate a task.
-4. If exactly one ready task: use it.
-5. If more than one: `AskUserQuestion` to let the user pick.
-6. **Claim it** before doing anything else: edit the Map Issue to flip the
-   selected row's status from `not-started` to `in-progress` (see
-   [reference.md](reference.md) for the exact edit). This is best-effort, not
-   a hard lock — but it closes the common case where a resumed or re-invoked
-   session would otherwise silently pick the same task a second time.
-7. `gh issue view <task-issue-number> --json body` and convert its body
-   (Description / Acceptance Criteria / Verification Method / Implementation
-   Sketch) into `requirements-report.md`. Record `source_type: map-issue`,
-   the Map Issue number, and the Task Issue number.
+3. If zero are ready, say why (nothing ready / everything done / everything
+   blocked) and stop. Never invent a task.
+4. **Always ask the user which task to work on** — with `AskUserQuestion`,
+   even when only one is ready. Present each ready task as an option with its
+   Issue number and title, and its one-line description as the option
+   description. This is a decision point, not a lookup: the user may know the
+   priority order has changed, or that a task is about to be made obsolete by
+   another.
+5. `gh issue view <task-issue-number> --json body,title,url` for the task the
+   user chose.
+
+**Do not claim the task yet.** Claiming happens in Step 3, after the user has
+approved its content — a task that turns out to need rewriting shouldn't be
+left marked `in-progress` while that's sorted out.
 
 ### Input B — Standalone
 
-Run the four-topic interview (goals, features, constraints, definition of
-done — see [reference.md](reference.md) for the question bank) directly with
-the user. Record `source_type: standalone`.
+Run the four-topic interview (goals, features, constraints, definition of done
+— question bank in [reference.md](reference.md)) directly with the user.
+Record `source_type: standalone`. There's no Issue to scrutinise, but Step 2
+still applies to what you drafted from the interview.
 
-## Step 2 — Check for `docs/tool.md`
+## Step 2 — The Scrutiny Gate
+
+Put the task's content in front of the user **in full**. For Input A that's
+the Task Issue body as written — Description, Acceptance Criteria,
+Verification Method, Implementation Sketch. For Input B it's your draft of the
+same four sections from the interview.
+
+Alongside it, give them your own read of it. You have just read the Issue with
+fresh eyes; say what you noticed, using the checklist in
+[reference.md](reference.md) — acceptance criteria that aren't checkable,
+scope that looks larger than one PR, a dependency the graph doesn't list, a
+term used inconsistently with the rest of the codebase, a design doc under
+`docs/design/` that already contradicts it. Be specific and brief. If it looks
+sound, say that too, and say why.
+
+Then `AskUserQuestion`:
+
+> この Issue の内容で着手してよいですか？
+
+- **`proceed`** — the content is correct; continue to Step 3.
+- **`revise`** — something needs to change first.
+
+**On `revise`:** stop here. Write nothing further, claim nothing, and return
+with `verdict: needs-refinement` plus the user's stated reason and the Issue
+number. The orchestrator will run Phase 2 (`issue-refinement`), which handles
+the discussion, the Issue edits, the design-doc updates, and their PR — and
+then comes back to this gate.
+
+## Step 3 — Claim the Task (Input A only)
+
+Now that the content is approved, flip the selected row's status in the Map
+Issue from `not-started` to `in-progress` ([reference.md](reference.md) has
+the exact edit). Best-effort, not a lock — it closes the common case of a
+re-invoked session picking up a task someone is already deep into.
+
+## Step 4 — Check for `docs/tool.md`
 
 ```bash
 test -f docs/tool.md && echo present || echo missing
 ```
-If missing, print [../orchestrator/templates/tool-template.md](../orchestrator/templates/tool-template.md)'s
-contents and tell the user it's optional but helps later phases pick the
-right verification tools. Continue regardless — this does not block Phase 1.
 
-(This check also runs here, not only from the orchestrator, because
-`requirement-understanding` is the very first skill invoked and it's cheapest
-to surface the nudge immediately after establishing what's being built.)
+If missing, print
+[../orchestrator/templates/tool-template.md](../orchestrator/templates/tool-template.md)
+and tell the user it's optional but helps later phases pick the right test and
+verification commands. Continue regardless — this never blocks.
 
-## Step 3 — Write the Requirements Report
+## Step 5 — Write the Requirements Report
 
-Write `.claude/implementation-workflow/<task-id>/requirements-report.md`, same
-shape as task-splitter's report (Project Goals / Core Features / Constraints /
-Definition of Done), plus a header recording `source_type` and, if
-`map-issue`, the Map Issue + Task Issue numbers.
+Write `.claude/implementation-workflow/<task-id>/requirements-report.md`:
+Project Goals / Core Features / Constraints / Definition of Done, plus the
+header in [reference.md](reference.md) recording `source_type` and, for
+`map-issue`, the Map Issue and Task Issue numbers.
+
+If Phase 2 revised the Issue before you got here, write the report from the
+**revised** Issue body — re-read it with `gh issue view` rather than working
+from what you read the first time.
 
 ## Return Value
 
-Return the task ID, `source_type`, the report path, and (if Input A) the Map
-Issue and Task Issue numbers — the orchestrator needs these to route Phase 9
-later.
+- `verdict`: `ready` | `needs-refinement`
+- `TASK_ID`, `source_type`, the report path
+- For `map-issue`: the Map Issue and Task Issue numbers, and the Task Issue
+  title (the orchestrator derives the branch name from it in Phase 3)
+- For `needs-refinement`: the user's reason, verbatim enough that
+  `issue-refinement` doesn't have to ask them to repeat it

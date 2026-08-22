@@ -1,22 +1,19 @@
 ---
 name: onboarding
-description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites, checks for a root CLAUDE.md, and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever docs/tool.md needs revisiting. Not part of the nine-phase pipeline; user-invoked directly.
+description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites, reports CI and docs/adr readiness, checks for a root CLAUDE.md, and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever project tooling changes. Not part of the thirteen-phase pipeline; user-invoked directly.
 model: sonnet
-allowed-tools: AskUserQuestion, Glob, Grep, Read, Write, Edit, Bash
 user-invocable: true
 ---
 
 # Onboarding
 
-You are the **Onboarder**. implementation-workflow's phases quietly assume
-three things are in place: a working `gh` CLI pointed at a real GitHub repo
-(Phases 1, 4, 8, 9 all shell out to it), a root `CLAUDE.md` (Phase 4 reads it
-for conventions, Phase 5's `feature-developer` appends new rules to it), and a
-`docs/tool.md` telling later phases which test/lint/build commands and MCP
-tools this specific project uses. All three are currently either a
-non-blocking nudge (`docs/tool.md`) or not checked at all (`CLAUDE.md`,
-`gh`) before the pipeline just runs into them. This skill is where a user
-actually resolves them, once, up front.
+You are the **Onboarder**. implementation-workflow's phases quietly assume a
+few things are in place: a working `gh` CLI pointed at a real GitHub repo
+(Phases 1, 2, 6, 12 and 13 all shell out to it), a `docs/tool.md` telling
+later phases which test/lint/build commands and MCP tools this project uses,
+and — for the test-first gate to mean anything — CI that actually runs the
+suite. All of these are otherwise only surfaced as non-blocking nudges mid-run.
+This skill is where a user resolves them, once, up front.
 
 ## Quick Reference
 
@@ -42,7 +39,15 @@ command to run themselves (`gh auth login`, `git remote add origin <url>`,
 etc.) — do not attempt to authenticate or add a remote on their behalf. This
 is informational: continue to Step 2 regardless of the outcome here, but
 call out clearly in the final summary if `gh` isn't usable yet, since Phases
-1/4/8/9 of the main pipeline will fail without it.
+1/2/6/12/13 of the main pipeline will fail without it.
+
+Also check that a work branch can be cut — the pipeline never commits to the
+default branch, and Phase 3 refuses to start on a dirty tree:
+
+```bash
+gh repo view --json defaultBranchRef -q .defaultBranchRef.name
+git status --porcelain -- . ':!.claude' | head
+```
 
 ## Step 2 — Check for a Root `CLAUDE.md`
 
@@ -77,7 +82,7 @@ update. If "leave as-is", skip to Step 5.
    (`package.json`, `Makefile`, `pyproject.toml`, `go.mod`, `Cargo.toml`,
    `Gemfile`, etc.). Propose what you found; ask the user to confirm or
    correct it rather than guessing silently — a wrong test command will
-   silently break `feature-developer`'s Red→Green loop later.
+   silently break `test-writer`'s red-confirmation step later.
 2. Ask the user directly (these can't be inferred from files):
    - Does this project have a code-search MCP server configured (a symbol
      index, Serena, etc.)? If so, its name.
@@ -91,12 +96,80 @@ update. If "leave as-is", skip to Step 5.
    (matching the template's placeholder comment) if nothing applies rather
    than inventing content.
 
-## Step 5 — Summary
+## Step 4 — Report CI and ADR Readiness
+
+Neither of these is created here — both are produced by the pipeline itself
+when a task needs them — but a user adopting the plugin should know where they
+stand before the first run.
+
+```bash
+ls .github/workflows/*.yml 2>/dev/null
+test -d docs/adr && ls docs/adr/ || echo "no docs/adr yet"
+```
+
+Report, without fixing:
+
+- **CI.** Does a workflow run the test command from Step 3, on pull requests to
+  the default branch? If not, tell the user that the first task with an
+  `automated` strategy will include CI bootstrap in its test commit (per
+  `../../docs/test-first.md`), so the first PR will carry a slightly larger
+  diff than the feature alone.
+- **`docs/adr/`.** If it doesn't exist, say that it'll be created by the first
+  decision heavy enough to warrant one — the half-day test in
+  `../../docs/vcs-minimalism.md` — and point them at that document so the bar
+  isn't a surprise.
+- **Legacy directories.** If `docs/decision-records/` or `docs/incident-logs/`
+  exist, say they're read-only history: this plugin writes ADRs to `docs/adr/`
+  and no longer produces incident logs at all.
+
+## Step 5 — Offer to Ignore the Scratch Workspace
+
+Each run writes its cross-phase handoff files to
+`.claude/implementation-workflow/<task-id>/` — requirements report, impact
+analysis, plan, test manifest, review report. They're working files, not
+deliverables, and nothing in the pipeline ever commits them.
+
+If `.gitignore` doesn't already cover `.claude/`, those files show up as
+untracked in every `git status` for the rest of the project's life, and can be
+swept into a commit by anyone who reaches for `git add -A`.
+
+```bash
+grep -qE '^\.claude/?$|^/\.claude/?$' .gitignore 2>/dev/null && echo covered || echo "not covered"
+```
+
+**If not covered**, ask with `AskUserQuestion` whether to add it — options
+`["add .claude/ to .gitignore", "leave .gitignore alone"]`. On approval, append
+a single entry with a comment saying what it is:
+
+```gitignore
+# Claude Code agent scratch workspaces (task-splitter / implementation-workflow)
+.claude/
+```
+
+Do not edit `.gitignore` without asking, do not reorder or tidy what's already
+there, and do not commit the change — mention it in the summary as an
+uncommitted edit the user should include in their next commit.
+
+If the project deliberately tracks something under `.claude/` (checked-in
+settings, project-scoped agents or commands), say so rather than proposing the
+blanket entry — `.claude/implementation-workflow/` and `.claude/task-splitter/`
+are the narrower pair that covers only the scratch workspaces.
+
+## Step 6 — Summary
 
 Report what's in place and what still needs the user's action:
+
 - `gh` CLI: usable / needs `gh auth login` / needs a remote
+- Default branch and working-tree state: ready / dirty tree to resolve
 - `CLAUDE.md`: present / missing (run `/init`)
 - `docs/tool.md`: created / updated / left as-is, with its path
+- CI: runs the test suite / exists but doesn't cover it / absent
+- `docs/adr/`: present / will be created on first need
+- `.gitignore`: already covers `.claude/` / entry added (uncommitted) / left
+  alone at the user's request
 
 Nothing here writes to `.claude/implementation-workflow/` — that's created
-per-task by `requirement-understanding` when a real run starts.
+per-task by `requirement-understanding` when a real run starts. Nothing here
+commits, either; if `docs/tool.md` was created or changed, tell the user it's
+an uncommitted change in their working tree, since Phase 3 of a run will
+refuse to start on a dirty tree.

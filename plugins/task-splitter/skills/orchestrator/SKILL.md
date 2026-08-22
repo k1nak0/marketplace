@@ -3,7 +3,6 @@ name: task-splitter
 description: Main entry point for task-splitter. Interviews the user for requirements, writes a behavior-only design doc, splits the epic into PR-sized tasks, confirms the split with the user, and registers everything as a GitHub Map Issue plus per-task Issues. Invoke this skill to start splitting a new epic into tasks.
 argument-hint: "<epic/feature description>"
 model: sonnet
-allowed-tools: AskUserQuestion, Glob, Grep, Read, Write, Bash, ToolSearch, Agent, TaskCreate, TaskUpdate, TaskList, Skill
 user-invocable: true
 ---
 
@@ -24,6 +23,19 @@ confirmation gate before the external, hard-to-undo Issue-creation step.
 | 3 | Task Planning | Skill: `plan-tasks` | `task-breakdown-plan.md` |
 | — | Confirm Gate | Orchestrator inline (`AskUserQuestion`) | go/no-go on the breakdown |
 | 4 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues |
+
+### Shared Policy
+
+Every phase here is bound by
+[../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md): the plan, the
+breakdown, and the rationale for the split go to GitHub Issues, and the only
+things this plugin writes to the repository are `docs/design/<slug>.md`,
+`docs/design/index.md`, and `docs/prd.md` — all of which describe *what*, not
+*how*. Design docs have **no `## Implementation Notes` section**; if you see
+one in an existing doc, leave it alone but never add another.
+
+Read that document before Phase 2, and pass the same expectation on to the
+user if they ask why the breakdown isn't being written to a file.
 
 ---
 
