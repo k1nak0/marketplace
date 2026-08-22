@@ -30,7 +30,7 @@ reads or writes that field until the next task — merge them.
 
 ## Task Breakdown Plan vs. Implementation Plan
 
-| | `task-breakdown-plan.md` (this skill) | `implementation-plan.md` (implementation-workflow Phase 4) |
+| | `task-breakdown-plan.md` (this skill) | `implementation-plan.md` (implementation-workflow Phase 6) |
 |---|---|---|
 | Written before or after codebase investigation | Before | After |
 | Detail level | Sketch: rough approach, likely files | Concrete: exact files, symbols, test cases |
@@ -43,10 +43,25 @@ it's `implementation-workflow`'s job to correct it, not this skill's.
 
 ## Verification Method Guidance
 
-- `automated`: the acceptance criteria can be checked by a test suite.
-- `manual`: requires human judgement, visual inspection, or a live external
-  system (matches the `manual` branch of `implementation-workflow`'s
-  `implementation-workflow`).
+- `automated` — every acceptance criterion can be checked by a test suite.
+- `manual` — none of them can: the task is entirely about a rendered surface or
+  a live external system.
+- `mixed` — some of each. This is the normal shape for anything with both a
+  logic core and a visible surface, and it is not a hedge.
 
-When unsure, default to `manual` and let `implementation-planning` (Phase 4 of
-implementation-workflow) firm it up once the codebase context is available.
+`implementation-workflow` treats both kinds as the same thing at different
+levels of executability: automated tests are an executable specification, and
+manual tests are a non-executable one committed to `docs/manual-tests/`. Both
+are frozen before implementation starts. So `manual` here does not mean "less
+rigorous" — it means "a runner can't check it".
+
+**`automated` is the default.** Reach for `manual` on a criterion only when an
+automated test genuinely cannot express the behaviour. "Awkward to test" is a
+reason to write a fixture, not a reason to hand the work to a human forever.
+
+**When you genuinely can't tell, ask the user** rather than defaulting either
+way. A wrong `manual` here quietly proposes a permanent manual step; a wrong
+`automated` gets caught later, but only after a plan has been written around
+it. Phase 6 of `implementation-workflow` routes each criterion individually
+once the codebase context exists, so a rough call here is recoverable — an
+unexamined one is what causes trouble.

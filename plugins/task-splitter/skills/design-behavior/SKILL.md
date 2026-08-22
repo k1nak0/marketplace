@@ -1,5 +1,4 @@
 ---
-name: design-behavior
 description: Turn a requirements report into a behavior-only design doc under docs/design/, updating docs/design/index.md and merging into docs/prd.md. Reads existing design docs to flag (not auto-resolve) conflicts. Use for Phase 2 of task-splitter, after understand-requirements has written requirements-report.md.
 model: sonnet
 user-invocable: false

@@ -1,11 +1,10 @@
 ---
-name: register-tasks
-description: Register a confirmed task breakdown as a GitHub Map Issue plus per-task Issues, using the gh CLI. Use for Phase 4 of task-splitter, after the user has confirmed the task-breakdown-plan.md produced by plan-tasks.
+description: Register a confirmed task breakdown as a GitHub Map Issue plus per-task Issues, using the gh CLI. Use for Phase 5 of task-splitter, after the user has confirmed the task-breakdown-plan.md produced by plan-tasks and Phase 4 has opened the design-doc PR.
 model: sonnet
 user-invocable: false
 ---
 
-# Register Tasks — Phase 4
+# Register Tasks — Phase 5
 
 You are the **Task Registrar**. You turn a confirmed `task-breakdown-plan.md`
 into real GitHub Issues: one Map Issue tracking the whole epic, and one Task
@@ -60,7 +59,9 @@ Record each `{title, issue, depends_on}` in `issue-map.json` as it's created.
 Using [templates/map-issue-template.md](templates/map-issue-template.md) and
 the real issue numbers from `issue-map.json`, compose the full body and edit
 it in with `--body-file -` (see [reference.md](reference.md) for why not
-`--body`):
+`--body`). Fill the `**Design PR:**` header from the `DESIGN_PR_URL` the
+orchestrator passed you, and leave every `PR` cell empty — those are
+`implementation-workflow`'s to fill:
 ```bash
 gh issue edit <map-issue-number> --body-file - <<'ISSUE_BODY'
 <full body>

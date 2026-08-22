@@ -1,5 +1,4 @@
 ---
-name: plan-tasks
 description: Decompose a design doc into PR-sized tasks with a dependency graph, acceptance criteria, verification method, and a brief implementation sketch per task. Writes task-breakdown-plan.md. Use for Phase 3 of task-splitter, after design-behavior has written the design doc.
 model: sonnet
 user-invocable: false
@@ -34,12 +33,13 @@ capture:
 - Title
 - Description (what this task delivers, functionally)
 - Acceptance Criteria (concrete, checkable)
-- Verification Method: `manual` or `automated`
+- Verification Method: `automated`, `manual`, or `mixed` — see
+  [reference.md](reference.md). `mixed` is common and not a hedge.
 - Design doc anchor (which section of `docs/design/<slug>.md` it implements)
 - **Implementation Sketch** — 2-4 lines, rough approach and likely files/
   functions/modules touched. This is a sketch to help a reader size the task
   and spot missing dependencies, not a real implementation plan — the
-  authoritative plan is written later by `implementation-workflow` Phase 4
+  authoritative plan is written later by `implementation-workflow` Phase 6
   once the codebase has actually been investigated. If you don't have enough
   information to sketch this in good faith, write "TBD — needs codebase
   investigation" rather than guessing.

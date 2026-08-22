@@ -1,5 +1,4 @@
 ---
-name: understand-requirements
 description: Conduct a structured requirements interview for a new epic/feature that will be split into multiple tasks. Elicits project goals, core features, constraints, scope boundaries, and definition of done. Writes a machine-readable requirements-report.md. Use this at the start of every new task-splitter run before design-behavior.
 argument-hint: "[optional feature description or context]"
 model: sonnet
