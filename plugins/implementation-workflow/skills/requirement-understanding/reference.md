@@ -100,7 +100,8 @@ directly:
 - Verification Method → Definition of Done
 - Implementation Sketch → carry forward as-is into a "Sketch from
   task-splitter" note; `repository-explorer` and `implementation-planning`
-  treat it as a starting hypothesis, not a constraint.
+  treat it as a starting hypothesis, not a constraint. It is also the best
+  available signal for External Dependencies below.
 
 ## Standalone Interview (Input B)
 
@@ -121,12 +122,37 @@ manual verification step.
 For any ambiguous answer, present two concrete interpretations and ask which is
 correct before writing the report.
 
-## `requirements-report.md` Header (both inputs)
+## `requirements-report.md` Structure (both inputs)
 
 ```markdown
+# Requirements Report
+
 **Task ID:** <task-id>
 **Source Type:** map-issue | standalone
 **Map Issue:** #<N> (map-issue only)
 **Task Issue:** #<N> (map-issue only)
 **Scrutiny Gate:** approved as written | approved after refinement (PR <url>)
+
+## Project Goals
+## Core Features
+## Constraints
+## External Dependencies
+
+**New library required:** yes | no
+<If yes: library name, use case, minimum version, licence.>
+
+## Definition of Done
 ```
+
+Every section is written every time. Two of them are read mechanically by later
+phases and must not be left as prose to interpret:
+
+| Section | Read by | What it decides |
+|---|---|---|
+| `## External Dependencies` → `**New library required:**` | Phase 5, `library-researcher` | Whether library research runs at all |
+| `## Definition of Done` | Phase 6, `implementation-planning` | Which acceptance criteria are automatable and which need a manual test |
+
+For Input B, `**New library required:**` comes from the Constraints question in
+the interview. For Input A, derive it from the Task Issue's Description and
+Implementation Sketch — and if the Issue genuinely doesn't say, ask the user at
+the scrutiny gate rather than guessing `no`.

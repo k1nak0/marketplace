@@ -1,5 +1,4 @@
 ---
-name: implementation-workflow
 description: Main entry point for implementation-workflow. Takes a task off a GitHub Map Issue (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, human-approved test-first specification, implementation against frozen tests, automated and human review, history cleanup, and PR. Invoke this skill to implement a task, or to resume one within the same session.
 argument-hint: "<Map Issue number/URL, or a feature description>"
 model: sonnet
@@ -39,9 +38,9 @@ below:
 | 4 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
 | 5 | Library Investigation *(conditional)* | Agent: `library-researcher` | `library-usage-report.md` |
 | 6 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md`, Issue comment |
-| 7 | Test Authoring | Agent: `test-writer` | test files + `test-manifest.json` |
+| 7 | Test Authoring | Agent: `test-writer` | test files, `docs/manual-tests/`, `test-manifest.json` |
 | 8 | Test Review Gate & Freeze | Orchestrator inline | human approval → the test commit |
-| 9 | Implementation | Agent: `implementer` *(resumable this session)* | source changes, `why-notes.md`, any ADR |
+| 9 | Implementation | Agent: `implementer` | uncommitted source changes, `why-notes.md`, any ADR |
 | 10 | Automated Review | Agent: `code-reviewer` | `review-report.md` (freeze verification first) |
 | 11 | Human Review Gate | Orchestrator inline | approve / request-changes |
 | 12 | History Cleanup & Persistence | Agent: `persistence-engineer` | clean series, push, PR |
@@ -55,13 +54,30 @@ nothing. Return a path plus a short summary.
 **`implementation-planning`** — runs inline (not isolated) so it can ask the
 user directly when the test strategy is ambiguous.
 
-**`test-writer`** — writes the specification as tests; no production code
-beyond signature-only scaffolding. Resumable this session for gate feedback.
+**`test-writer`** — writes the specification: automated tests for what a runner
+can check, a committed `docs/manual-tests/<slug>.md` for what it can't. No
+production code beyond signature-only scaffolding.
 
-**`implementer`** — makes the frozen tests pass. Cannot modify them; escalates
-via `test-dispute.md` instead. Resumable within this session via the `Agent`
-tool's `resume` parameter — keep its returned agent/context ID in your working
-context after each invocation; there's no file it's persisted to.
+**`implementer`** — makes the frozen tests pass and executes the frozen manual
+steps. Cannot modify either; escalates via `test-dispute.md` instead. **Runs no
+`git` commands** — its work stays in the working tree until Phase 12.
+
+### How agents are re-invoked
+
+There is **no conversation resume**. Every `Agent(...)` call starts a fresh
+context. When a phase sends work back — a Phase 8 request-changes, a Phase 10
+fix round, a Phase 11 send-back — you call the agent again from scratch, and
+continuity comes from a file it maintains itself in the workspace:
+
+| Agent | Its log | Written at the end of every invocation |
+|---|---|---|
+| `test-writer` | `test-authoring-log.md` | what it wrote, the feedback it got, interpretations it chose |
+| `implementer` | `implementation-log.md` | what it built, what it tried and abandoned, findings addressed |
+
+Each agent reads its own log before doing anything. Your job is to pass the new
+feedback and the workspace path; the log carries the rest. Do not try to
+summarise the previous round into the prompt — the log is more complete than
+your summary would be, and it's the agent's own words.
 
 **`code-reviewer`** — fresh context, no access to the implementer's history.
 Verifies the test freeze before reviewing anything else. FAIL on any
@@ -147,12 +163,18 @@ Runs only on `needs-refinement`. It discusses the change with the user,
 rewrites the Issues, updates `docs/design/`, ships those as their own PR, and
 waits for that PR to merge.
 
-When it returns:
+When it returns, re-run Phase 1 — **passing it the existing `TASK_ID`** so the
+second pass writes into the same workspace instead of opening a new one:
 
-- **The task was split or replaced** → re-run Phase 1 from the top. The
-  selection itself has to be redone, not just the scrutiny gate.
-- **Otherwise** → re-run Phase 1 to re-read the revised Issue and pass the
-  scrutiny gate again. A second `needs-refinement` is legitimate; a third in
+```
+Skill(skill="implementation-workflow:requirement-understanding")
+# tell it: "Reuse TASK_ID=<TASK_ID>; Phase 2 has revised the Issue."
+```
+
+- **The task was split or replaced** → Phase 1 redoes the selection too, not
+  just the scrutiny gate.
+- **Otherwise** → Phase 1 re-reads the revised Issue and re-runs the scrutiny
+  gate. A second `needs-refinement` is legitimate; a third in
   one run means something is wrong with the task at a level this pipeline
   can't fix — say so and ask the user whether to continue or stop.
 - **The doc PR is unmerged and the user chose to stop** → stop the run
@@ -188,7 +210,8 @@ Full rules: `<POLICY_DOCS>/git-workflow.md`.
 ### Phase 4
 
 ```
-Agent(subagent_type="repository-explorer",
+Agent(description="Investigate codebase impact",
+      subagent_type="repository-explorer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
 Input: requirements-report.md
@@ -199,11 +222,14 @@ Confirm the report exists before continuing.
 
 ### Phase 5 (Conditional)
 
-Read `requirements-report.md` → "External Dependencies". If "New library
-required: no", log a skip and move on. Otherwise:
+Read `requirements-report.md` → `## External Dependencies` →
+`**New library required:**`. Phase 1 always writes this line; if it's somehow
+absent, don't infer `no` — go back and ask. On `no`, log a skip and move on.
+Otherwise:
 
 ```
-Agent(subagent_type="library-researcher",
+Agent(description="Research the required library",
+      subagent_type="library-researcher",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
 Input: requirements-report.md
@@ -216,9 +242,8 @@ Output: .claude/implementation-workflow/<TASK_ID>/library-usage-report.md")
 Skill(skill="implementation-workflow:implementation-planning")
 ```
 
-Confirm `implementation-plan.md` exists. Record `TEST_STRATEGY`
-(`automated`|`manual`), the CI readiness finding, and
-`TRACKING_ISSUE_NUMBER` — the Task Issue number for `map-issue`, or the Issue
+Confirm `implementation-plan.md` exists. Record the automated/manual test-case
+counts, the CI readiness finding, and `TRACKING_ISSUE_NUMBER` — the Task Issue number for `map-issue`, or the Issue
 this phase just created for `standalone`. Every later phase that touches
 GitHub uses `TRACKING_ISSUE_NUMBER` regardless of `source_type`.
 
@@ -228,47 +253,61 @@ For `standalone`, rename the branch now that the Issue number exists:
 ### Phase 7 — Test Authoring
 
 ```
-TEST_WRITER_RESULT = Agent(subagent_type="test-writer",
+TEST_WRITER_RESULT = Agent(description="Write the frozen specification",
+      subagent_type="test-writer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
-Input: implementation-plan.md, requirements-report.md")
+Input: implementation-plan.md, requirements-report.md
+Read test-authoring-log.md first if it exists — it is your own record from
+earlier in this run. Append to it before you finish.")
 ```
 
-Save the returned agent/context ID as `TEST_WRITER_CONTEXT_ID`. Confirm
-`test-manifest.json` exists.
+Confirm `test-manifest.json` exists and that at least one of `test_files` /
+`manual_test_files` is non-empty. If both are empty, the task has nothing to
+freeze: stop and go back to Phase 6.
 
 ### Phase 8 — Test Review Gate & Freeze (Orchestrator Inline)
 
 This gate is the point of the whole design. Give the user enough to actually
-judge the specification, not just acknowledge it:
+judge the specification, not just acknowledge it. Both halves of it:
 
-- Every test name paired with the behaviour it pins down (from
+- Every automated test name paired with the behaviour it pins down (from
   `TEST_WRITER_RESULT`), so they can read the spec without opening files.
-- `git diff` of the test files.
-- The failure output proving each test fails for the right reason.
-- What `test-writer` did about CI.
-- Any acceptance criterion it could not express as a test, and any ambiguity it
-  had to resolve by choosing an interpretation. **Surface these prominently** —
-  they're the things that are cheap to fix now and expensive later.
-
-For `manual` strategy, show `verification-procedure.md` instead of tests.
+- Every manual test step with its pass criterion, and the one-line reason it
+  isn't automated. Read those reasons critically — a manual step that could
+  have been a test is the most common way this gate degrades.
+- `git diff` of the test files and of `docs/manual-tests/`.
+- The failure output proving each automated test fails for the right reason.
+- What `test-writer` did about CI, and about the `README.md` link to
+  `docs/manual-tests/index.md`.
+- Any acceptance criterion it could not express as a test of either kind, and
+  any ambiguity it had to resolve by choosing an interpretation. **Surface
+  these prominently** — they're the things that are cheap to fix now and
+  expensive later.
 
 `AskUserQuestion`: "このテストで振る舞いを固定してよいですか？" Options:
-`["approve — freeze the tests and start implementation", "request-changes — describe what the tests should say instead"]`.
+`["approve — freeze the specification and start implementation", "request-changes — describe what the tests should say instead"]`.
 
-**On `request-changes`:** collect the free-text feedback, then:
+**On `request-changes`:** collect the free-text feedback, then invoke
+`test-writer` again — a fresh agent, not a resume:
 
 ```
-Agent(subagent_type="test-writer", resume=TEST_WRITER_CONTEXT_ID,
-      prompt="Human reviewer requested: <feedback>. Amend the tests and re-confirm they fail for the right reason.")
+Agent(description="Amend the specification",
+      subagent_type="test-writer",
+      prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
+Policy docs: <POLICY_DOCS>/
+Read test-authoring-log.md first — it is your own record from earlier in this run.
+Human reviewer requested: <feedback>
+Amend the specification and re-confirm the automated tests fail for the right
+reason. Append a new round to test-authoring-log.md before you finish.")
 ```
 
-Update `TEST_WRITER_CONTEXT_ID` and return to the start of Phase 8.
+Return to the start of Phase 8.
 
 **On `approve` — create the freeze point:**
 
 ```bash
-git add -- <test_files> <scaffold_files> <ci_files>   # from test-manifest.json
+git add -- <test_files> <manual_test_files> <scaffold_files> <ci_files>   # from test-manifest.json
 git commit -m "test(<scope>): <what behaviour is now specified>"
 git rev-parse HEAD
 ```
@@ -276,32 +315,39 @@ git rev-parse HEAD
 Write that SHA into `test-manifest.json`'s `test_commit`. **Local commit only
 — do not push.** Nothing is published until Phase 12.
 
-**Manual strategy:** there is no test commit. Post
-`verification-procedure.md` to the tracking Issue instead:
-`gh issue comment <TRACKING_ISSUE_NUMBER> --body-file .claude/implementation-workflow/<TASK_ID>/verification-procedure.md`.
+There is always a test commit, including for a task whose specification is
+entirely manual — that commit carries `docs/manual-tests/<slug>.md`, its index
+row, and the `README.md` link. A committed procedure is what lets the next
+person re-run these checks; that's why it isn't an Issue comment.
 
 ### Phase 9 — Implementation
 
 ```
-IMPL_RESULT = Agent(subagent_type="implementer",
+IMPL_RESULT = Agent(description="Implement against the frozen tests",
+      subagent_type="implementer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
 Input: implementation-plan.md, test-manifest.json
-The tests at <test_commit> are frozen. You cannot modify them.")
+Read implementation-log.md first if it exists — it is your own record from
+earlier in this run. Append to it before you finish.
+Everything in test_files and manual_test_files at <test_commit> is frozen. You
+cannot modify either. Do not run git; Phase 12 commits your work.")
 ```
 
-Save the returned agent/context ID as `IMPL_CONTEXT_ID` — needed for the Phase
-10 fix loop and the Phase 11 request-changes branch.
+The implementation stays **uncommitted** from here until Phase 12. That's by
+design (`<POLICY_DOCS>/git-workflow.md` §4) — don't commit it yourself, and
+never `git reset --hard` on this branch.
 
 **If `test-dispute.md` was written:** the implementer believes a frozen test is
 wrong. Show the user the dispute in full alongside the test it concerns, and
 `AskUserQuestion`: `["amend the tests — the dispute is valid", "reject the dispute — implement against the tests as written"]`.
 
-- **Amend:** resume `test-writer` with the dispute, re-run Phase 8's gate, then
-  **amend the test commit** rather than adding a new one (`git add -- <test
-  files>; git commit --amend --no-edit`), update `test_commit` in the manifest,
-  and resume the implementer with the updated tests.
-- **Reject:** resume the implementer with the user's reasoning and the
+- **Amend:** invoke `test-writer` again with the dispute (fresh agent; it reads
+  `test-authoring-log.md`), re-run Phase 8's gate, then **amend the test
+  commit** rather than adding a new one (`git add -- <frozen paths>; git commit
+  --amend --no-edit`), update `test_commit` in the manifest, and re-invoke the
+  implementer against the updated specification.
+- **Reject:** re-invoke the implementer with the user's reasoning and the
   instruction to implement against the tests as written.
 
 **If `blocked-report.md` was written:** if `source_type == map-issue`, flip
@@ -318,30 +364,36 @@ MAX_REVIEW_FIX_ATTEMPTS = 5
 ```
 
 ```
-REVIEW_RESULT = Agent(subagent_type="code-reviewer",
+REVIEW_RESULT = Agent(description="Review the implementation",
+      subagent_type="code-reviewer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
-Input: test-manifest.json, implementation-plan.md, modified-files.json")
+Input: test-manifest.json, implementation-plan.md, modified-files.json,
+requirements-report.md, why-notes.md, impact-analysis-report.md")
 ```
 
 **If the test freeze was violated** (reported first in the return): this is not
 an ordinary FAIL. Tell the user plainly what was changed and show the diff —
 an agent editing a human-approved specification is worth their attention even
-though it's about to be reverted. Then resume the implementer with the
-instruction to restore the frozen files exactly and either satisfy them as
-written or file a `test-dispute.md`. Count it against
+though it's about to be reverted. Then re-invoke the implementer with the
+instruction to restore the frozen files exactly (`git restore -- <paths>`) and
+either satisfy them as written or file a `test-dispute.md`. Count it against
 `REVIEW_FIX_ATTEMPTS` and re-run Phase 10.
 
 **If FAIL:**
 
 ```
-FIX_RESULT = Agent(subagent_type="implementer", resume=IMPL_CONTEXT_ID,
-      prompt="Review report at .claude/implementation-workflow/<TASK_ID>/review-report.md.
-Fix all Critical and Major findings, then re-verify. The test freeze still applies.")
+FIX_RESULT = Agent(description="Fix review findings",
+      subagent_type="implementer",
+      prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
+Policy docs: <POLICY_DOCS>/
+Read implementation-log.md first — it is your own record from earlier in this run.
+Review report at .claude/implementation-workflow/<TASK_ID>/review-report.md.
+Fix all Critical and Major findings, then re-verify. The test freeze still
+applies. Append a new round to implementation-log.md before you finish.")
 ```
 
-Update `IMPL_CONTEXT_ID`, increment `REVIEW_FIX_ATTEMPTS`, re-run
-`code-reviewer`.
+Increment `REVIEW_FIX_ATTEMPTS` and re-run `code-reviewer`.
 
 - Still FAIL at `REVIEW_FIX_ATTEMPTS >= MAX_REVIEW_FIX_ATTEMPTS`:
   ```bash
@@ -360,9 +412,12 @@ Update `IMPL_CONTEXT_ID`, increment `REVIEW_FIX_ATTEMPTS`, re-run
 
 Show the user:
 
-- `git diff <test_commit>..HEAD` — the implementation, separate from the
-  specification they already approved.
-- The test result (`N passing`) or the manual verification results per step.
+- The implementation, separate from the specification they already approved.
+  It is uncommitted at this point, so that's
+  `git diff HEAD -- . ':!.claude'` plus `git status --porcelain -- . ':!.claude'`
+  for the files git hasn't seen yet — not `git diff <test_commit>..HEAD`, which
+  would show nothing.
+- The test result (`N passing`) and the observed result of every manual step.
 - Any ADR the implementer wrote, in full. **An ADR is reviewed as carefully as
   code** — it's the artifact with the longest half-life in the repository.
 - Anything the implementer flagged rather than resolved: doc contradictions, a
@@ -375,34 +430,61 @@ Show the user:
 **On `request-changes`:**
 
 ```
-FIX_RESULT = Agent(subagent_type="implementer", resume=IMPL_CONTEXT_ID,
-      prompt="Human reviewer requested: <feedback>. Address and re-verify. The test freeze still applies.")
+FIX_RESULT = Agent(description="Address human review feedback",
+      subagent_type="implementer",
+      prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
+Policy docs: <POLICY_DOCS>/
+Read implementation-log.md first — it is your own record from earlier in this run.
+Human reviewer requested: <feedback>
+Address and re-verify. The test freeze still applies. Append a new round to
+implementation-log.md before you finish.")
 ```
 
-Update `IMPL_CONTEXT_ID`, re-run Phase 10, then return to Phase 11. Let the
+Re-run Phase 10, then return to Phase 11. Let the
 commits pile up messily — Phase 12 regroups the whole series, so there is no
 reason to keep the history tidy along the way.
 
 If the feedback is really about the *specification* rather than the
-implementation, route it to Phase 8's amend path instead — resume
+implementation, route it to Phase 8's amend path instead — re-invoke
 `test-writer`, re-approve, amend the test commit.
 
 ### Phase 12 — History Cleanup & Persistence
 
 ```
-Agent(subagent_type="persistence-engineer",
+Agent(description="Build the commit series and open the PR",
+      subagent_type="persistence-engineer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
 source_type: <map-issue|standalone>
-Tracking Issue: #<TRACKING_ISSUE_NUMBER>
+Tracking Issue: #<TRACKING_ISSUE_NUMBER>   Map Issue: #<map-issue-number>
 Work branch: <WORK_BRANCH>   Base: <BASE>")
 ```
 
-Confirm the PR URL comes back, and show the user the final commit series — the
-history is the deliverable here as much as the code is.
+This is where the implementation becomes commits for the first time. Confirm
+the PR URL comes back, and show the user the final commit series — the history
+is the deliverable here as much as the code is.
 
-If it reports an aborted rewrite or a rejected push, do not retry blindly:
-surface the branch state and ask the user how to proceed.
+**If it reports the series didn't match the snapshot:** the working tree is
+intact and HEAD is back at the test commit — say that first, it's the user's
+main question. The cause is almost always a path missing from
+`modified-files.json`, so route it back to Phase 9 with the discrepancy:
+
+```
+Agent(description="Reconcile the modified-files list",
+      subagent_type="implementer",
+      prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
+Policy docs: <POLICY_DOCS>/
+Read implementation-log.md first — it is your own record from earlier in this run.
+Phase 12 could not account for every change: see regroup-discrepancy.diff.
+Reconcile modified-files.json with what is actually in the working tree, and
+say why anything unexpected is there. Append a round to implementation-log.md.")
+```
+
+Then re-run Phase 10 and Phase 12. If it happens twice, stop and hand it to the
+user — something is producing files nobody is tracking.
+
+**If it reports a rejected push,** do not retry blindly: surface the branch
+state and ask the user how to proceed.
 
 ### Phase 13 — Map Issue Update (Orchestrator Inline)
 
@@ -421,9 +503,13 @@ Print the final summary and stop.
 gh issue view <map-issue-number> --json body
 ```
 
-Flip this task's row to `done`, append the PR URL to Notes, and check whether
-any other row's dependencies are now all `done` — call those out as
-newly-unblocked in your summary.
+Flip this task's row's **Status** cell to `done` and put the PR URL in its
+**PR** cell (Phase 12 usually filled that in already — verify it, don't
+duplicate it). Then check whether any other row's dependencies are now all
+`done`, and call those out as newly-unblocked in your summary.
+
+If the table predates the `PR` column, add the column — header, separator, and
+an empty cell on every other row — rather than dropping the URL into Notes.
 
 ```bash
 gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
@@ -449,11 +535,21 @@ infer the position from what's on disk and in git:
 | Evidence | Resume at |
 |---|---|
 | Only `requirements-report.md` | Phase 3 (check the branch exists first) |
+| `impact-analysis-report.md`, and the report says a library is needed but there's no `library-usage-report.md` | Phase 5 |
+| `impact-analysis-report.md`, no `implementation-plan.md` | Phase 6 |
 | `implementation-plan.md`, no `test-manifest.json` | Phase 7 |
 | `test-manifest.json` with `test_commit: null` | Phase 8's gate |
-| `test_commit` set, `git log` shows only the test commit | Phase 9 |
-| Implementation commits present, no `review-report.md` | Phase 10 |
+| `test_commit` set, working tree clean apart from `.claude/` | Phase 9 |
+| Working tree dirty (the implementation), no `review-report.md` | Phase 10 |
+| `review-report.md` says PASS | Phase 11 |
 
-Subagent context IDs do not survive a session restart: re-run `test-writer` or
-`implementer` fresh, giving it the plan plus a note of what's already on disk.
-The test freeze is unaffected — it lives in git, not in an agent's memory.
+Nothing here depends on an agent's memory, because nothing ever did: agents are
+re-invoked fresh even mid-session, and their continuity lives in
+`test-authoring-log.md` and `implementation-log.md`. Those files survive a
+restart, so a resumed run picks up where it left off with the same context the
+in-session rounds had.
+
+The one thing that does **not** survive a restart is uncommitted work — the
+implementation is not in any commit until Phase 12. If the working tree is
+empty but `test_commit` is set, the implementation was lost; restart from
+Phase 9.

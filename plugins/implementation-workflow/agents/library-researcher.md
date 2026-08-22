@@ -52,40 +52,18 @@ From what you fetched, extract:
 
 ### 4. Write the Library Usage Report
 
-```markdown
-# Library Usage Report
+Structure it as:
 
-**Task ID:** <task-id>
-**Phase:** 5 — Library Investigation
-**Generated:** <timestamp>
-**Library:** <name> v<version>
-
-## Rationale
-
-Why this library is the right choice for the use case.
-
-## Setup
-
-```bash
-# Install command
-```
-
-## API Reference (Relevant Subset)
-
-### <FunctionOrClass>
-<Signature, parameters, return type>
-
-### Example — <Use Case>
-<Minimal working example>
-
-## Known Pitfalls
-
-- ...
-
-## Version Notes
-
-- This report targets v<version>. Breaking changes in v<next>: ...
-```
+- A header block: `**Task ID:**`, `**Phase:** 5 — Library Investigation`,
+  `**Generated:**`, `**Library:** <name> v<version>`
+- `## Rationale` — why this library is the right choice for the use case
+- `## Setup` — the install command, in a fenced block
+- `## API Reference (Relevant Subset)` — one `###` per class/function, with its
+  signature, parameters and return type, followed by a minimal working example
+  adapted to the project's use case
+- `## Known Pitfalls`
+- `## Version Notes` — the version this report targets, and the breaking
+  changes in the next one
 
 ## Output Requirement
 
