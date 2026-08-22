@@ -1,7 +1,7 @@
 {
   "name": "implementation-workflow",
-  "version": "2.0.0",
-  "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement doc) through codebase investigation, planning, TDD implementation, automated review, human review, and commit/PR persistence.",
+  "version": "3.0.0",
+  "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, human-approved test-first specification, implementation against frozen tests, automated and human review, history cleanup, and PR.",
   "author": {
     "name": "k1nak0"
   },
@@ -10,21 +10,24 @@
   "license": "MIT",
   "keywords": [
     "workflow",
-    "tdd",
+    "test-first",
     "multi-agent",
     "code-review",
+    "adr",
     "github-issues"
   ],
   "skills": [
     "./skills/orchestrator",
     "./skills/onboarding",
     "./skills/requirement-understanding",
+    "./skills/issue-refinement",
     "./skills/implementation-planning"
   ],
   "agents": [
     "./agents/repository-explorer.md",
     "./agents/library-researcher.md",
-    "./agents/feature-developer.md",
+    "./agents/test-writer.md",
+    "./agents/implementer.md",
     "./agents/code-reviewer.md",
     "./agents/persistence-engineer.md"
   ]

@@ -25,7 +25,7 @@
 ## Verification Tools (MCP)
 
 <!-- e.g. Playwright MCP for browser verification, a Godot MCP for game
-     scenes. Name the MCP server/tool so feature-developer and code-reviewer
+     scenes. Name the MCP server/tool so test-writer, implementer, and code-reviewer
      know what's available for manual verification steps. -->
 
 ## Notes
