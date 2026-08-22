@@ -1,6 +1,6 @@
 ---
 name: onboarding
-description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites, reports CI and docs/adr readiness, and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever project tooling changes. Not part of the thirteen-phase pipeline; user-invoked directly.
+description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites, reports CI and docs/adr readiness, checks for a root CLAUDE.md, and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever project tooling changes. Not part of the thirteen-phase pipeline; user-invoked directly.
 model: sonnet
 user-invocable: true
 ---
@@ -49,7 +49,21 @@ gh repo view --json defaultBranchRef -q .defaultBranchRef.name
 git status --porcelain -- . ':!.claude' | head
 ```
 
-## Step 2 — Check for `docs/tool.md`
+## Step 2 — Check for a Root `CLAUDE.md`
+
+```bash
+test -f CLAUDE.md && echo present || echo missing
+```
+
+**If present:** nothing to do, move on to Step 3.
+
+**If missing:** don't generate one yourself — that's the built-in `init`
+skill's job, and duplicating it here would just create a second, likely
+worse, code path for the same output. Tell the user to run `/init` first,
+then continue to Step 3 regardless; note in the final summary that
+`CLAUDE.md` is still missing so it isn't lost as a follow-up.
+
+## Step 3 — Check for `docs/tool.md`
 
 ```bash
 test -f docs/tool.md && echo present || echo missing
@@ -57,11 +71,11 @@ test -f docs/tool.md && echo present || echo missing
 
 **If present:** show the current contents and ask the user (`AskUserQuestion`,
 options `["leave as-is", "update it"]`) whether to leave it or walk through an
-update. If "leave as-is", skip to Step 4.
+update. If "leave as-is", skip to Step 5.
 
-**If missing:** continue to Step 3.
+**If missing:** continue to Step 4.
 
-## Step 3 — Populate `docs/tool.md`
+## Step 4 — Populate `docs/tool.md`
 
 1. Auto-detect Test / Lint / Build commands by inspecting the project's
    manifest files per the heuristics in [reference.md](reference.md)
@@ -147,6 +161,7 @@ Report what's in place and what still needs the user's action:
 
 - `gh` CLI: usable / needs `gh auth login` / needs a remote
 - Default branch and working-tree state: ready / dirty tree to resolve
+- `CLAUDE.md`: present / missing (run `/init`)
 - `docs/tool.md`: created / updated / left as-is, with its path
 - CI: runs the test suite / exists but doesn't cover it / absent
 - `docs/adr/`: present / will be created on first need
