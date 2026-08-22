@@ -1,0 +1,8 @@
+# Config for the lychee link checker (.github/workflows/markdown-link-check.yml).
+# Every markdown link in this repo today is a relative cross-reference
+# between plugin files (SKILL.md -> reference.md, templates,
+# ../../docs/*.md) -- the network settings below only start mattering once
+# an external URL is added.
+max_retries = 3
+timeout = 20
+exclude_path = [".git", ".claude"]
