@@ -27,31 +27,44 @@ formats.
 
 ## implementation-workflow Plugin
 
-Takes a ready task off a `task-splitter` Map Issue (or a standalone
-requirement) through investigation, planning, implementation, review, human
-approval, and commit/PR. Entry point:
-`/implementation-workflow:implementation-workflow`.
+Takes a task off a `task-splitter` Map Issue (or a standalone requirement)
+through user scrutiny, investigation, planning, human-approved test-first
+specification, implementation against frozen tests, review, history cleanup,
+and PR. Entry point: `/implementation-workflow:implementation-workflow`.
 
 | Phase | Name | Mechanism | Output |
 |-------|------|-----------|--------|
-| 1 | Requirement Understanding | Skill: `requirement-understanding` | `requirements-report.md`; for `map-issue`, claims the selected task by flipping its row to `in-progress` |
-| 2 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
-| 3 | Library Investigation *(conditional)* | Agent: `library-researcher` | `library-usage-report.md` |
-| 4 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md`, posted to the Task Issue (or a new standalone tracking Issue) |
-| 5 | Implementation | Agent: `feature-developer` *(resumable this session)* | modified source + `CLAUDE.md`/`README.md`/`docs/design/*` updates |
-| 6 | Automated Review | Agent: `code-reviewer` | `review-report.md`; loops back to Phase 5 on FAIL, up to 5 attempts |
-| 7 | Human Review Gate | Orchestrator inline | `approve` or `request-changes` via `AskUserQuestion` |
-| 8 | Persistence | Agent: `persistence-engineer` | commit, push, PR via `gh` |
-| 9 | Map Issue Update | Orchestrator inline | `map-issue`: flips the task's row to `done`, closes the Task Issue. `standalone`: closes the tracking issue Phase 4 created (no Map Issue table to update). Phases 5/6 flip the row to `blocked` instead on an unresolved halt (`map-issue` only) |
+| 1 | Requirement Understanding & Task Selection | Skill: `requirement-understanding` | `requirements-report.md`; the user picks the task (always asked, even when one is ready) and approves its content at a scrutiny gate; claims it as `in-progress` only after approval |
+| 2 | Issue Refinement *(conditional)* | Skill: `issue-refinement` | on `needs-refinement`: rewritten Task/Map Issues + `docs/design/` updates, shipped as **their own PR**, merged before Phase 3 |
+| 3 | Branch Setup | Orchestrator inline | `<type>/<issue#>-<slug>` cut from the freshest default branch; refuses to start on a dirty tree |
+| 4 | Codebase Investigation | Agent: `repository-explorer` | `impact-analysis-report.md` |
+| 5 | Library Investigation *(conditional)* | Agent: `library-researcher` | `library-usage-report.md` |
+| 6 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md` + CI readiness finding, posted to the Task Issue (or a new standalone tracking Issue) |
+| 7 | Test Authoring | Agent: `test-writer` | test files (+ scaffolding, + CI if absent) and `test-manifest.json` |
+| 8 | Test Review Gate & Freeze | Orchestrator inline | human approves the tests → committed locally as one `test(...)` commit; that SHA is the freeze point |
+| 9 | Implementation | Agent: `implementer` *(resumable this session)* | source changes, `why-notes.md`, any ADR; **cannot modify tests** — escalates via `test-dispute.md` |
+| 10 | Automated Review | Agent: `code-reviewer` | `review-report.md`; verifies the test freeze mechanically before anything else; loops back to Phase 9 on FAIL, up to 5 attempts |
+| 11 | Human Review Gate | Orchestrator inline | `approve` or `request-changes` via `AskUserQuestion`; any ADR is reviewed here too |
+| 12 | History Cleanup & Persistence | Agent: `persistence-engineer` | regroups the branch into `test` + implementation commits, finalises draft ADRs, pushes (`--force-with-lease` only after a rewrite), opens/updates the PR |
+| 13 | Map Issue Update | Orchestrator inline | `map-issue`: flips the row to `done`, closes the Task Issue. `standalone`: closes the tracking Issue Phase 6 created. Phases 9/10 flip the row to `blocked` instead on an unresolved halt (`map-issue` only) |
 
-See `plugins/implementation-workflow/skills/*/reference.md` and
-`agents/*.md` for test-strategy inference rules, the review-loop cap, and the
-PR body contract.
+Shared premises all file-writing agents read first live in
+`plugins/implementation-workflow/docs/`: `vcs-minimalism.md` (what may land in
+VCS, the *why* routing, ADR rules), `git-workflow.md` (branching, commit shape,
+the soft-reset regroup, push policy), `test-first.md` (the
+`test-writer`/`implementer` contract and how the freeze is verified). The
+orchestrator resolves that directory once at Step 0 and passes it into every
+agent prompt.
 
-Standalone skill (outside the nine-phase pipeline): `onboarding`
+See `plugins/implementation-workflow/skills/*/reference.md` and `agents/*.md`
+for test-strategy inference, the scrutiny checklist, the review-loop cap, and
+the PR body contract.
+
+Standalone skill (outside the thirteen-phase pipeline): `onboarding`
 (`/implementation-workflow:onboarding`) — verifies `gh` CLI/GitHub-remote
-prerequisites and creates or updates the consuming project's `docs/tool.md`.
-Run once when adopting the plugin, or whenever project tooling changes. See
+prerequisites, reports CI and `docs/adr/` readiness, and creates or updates the
+consuming project's `docs/tool.md`. Run once when adopting the plugin, or
+whenever project tooling changes. See
 `plugins/implementation-workflow/skills/onboarding/reference.md` for the
 manifest-file auto-detection heuristics.
 
@@ -78,16 +91,33 @@ manifest-file auto-detection heuristics.
   a session is interrupted, resuming is manual: tell the orchestrator which
   task directory to continue, and it infers what's done from which files
   already exist there.
+- **VCS minimalism.** The *how* is carried by source code alone — plans,
+  reports, verification procedures, and implementation narrative go to Issues
+  and PR bodies, never to a committed file. The *why* always goes into VCS, in
+  one of three places: a source comment (reasoning local to one file), the
+  commit message body (reasoning spanning several), or an ADR (any decision a
+  human would need half a day or more to reverse). Each plugin carries its own
+  copy of this policy at `plugins/<plugin>/docs/vcs-minimalism.md` because
+  plugins install independently — **change one, change both.**
+- **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
+  Context / Decision / Consequences / Alternatives Considered). Standard
+  lifecycle: written as `draft`, flipped to `accepted` when the change ships;
+  once out of `draft`, `Decision` and `Context` are immutable and a change of
+  mind means a new superseding ADR. `docs/decision-records/` and
+  `docs/incident-logs/` are frozen historical reference; no new entries.
 - **`docs/design/`** holds one behavior-only doc per feature — observable
   inputs/outputs, interfaces, constraints, state transitions. No language,
-  library, algorithm, or file-layout detail. Each doc carries an
-  `## Implementation Notes` section that `feature-developer` appends to after
-  implementing — this is where technical decisions, snags, and lessons live
-  (the replacement for the old separate ADR/incident-log directories).
-  `docs/decision-records/` and `docs/incident-logs/` are kept as historical
-  reference only; no new entries are added to them.
+  library, algorithm, or file-layout detail. **No `## Implementation Notes`
+  section** — that was a *how* document in VCS and has been removed; technical
+  decisions now route to the three *why* channels above, and implementation
+  narrative to the PR body.
 - **`docs/prd.md`** is a single living file: product goals, scope boundaries,
   and links into `docs/design/`. Updated incrementally by `task-splitter`,
   never overwritten wholesale.
+- **No tool allowlists.** Neither plugin's skills declare `allowed-tools` and
+  no agent carries a "Tool Discipline" section — both plugins assume a
+  sandboxed environment. Restrictions that are *behavioural* rather than
+  mechanical are still stated as rules (the implementer not touching frozen
+  tests, investigation agents not editing source).
 - Subagent return values are chosen per phase for what's actually useful to
   the caller — not a fixed "summary only" rule.
