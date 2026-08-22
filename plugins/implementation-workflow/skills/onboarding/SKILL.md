@@ -1,5 +1,4 @@
 ---
-name: onboarding
 description: Set up a project to use implementation-workflow — verifies gh CLI/GitHub remote prerequisites, reports CI and docs/adr readiness, checks for a root CLAUDE.md, and creates or updates docs/tool.md. Run once when adopting the plugin in a new project, or whenever project tooling changes. Not part of the thirteen-phase pipeline; user-invoked directly.
 model: sonnet
 user-invocable: true
@@ -19,7 +18,7 @@ This skill is where a user resolves them, once, up front.
 
 - Auto-detection heuristics per manifest file: [reference.md](reference.md)
 - Template this skill fills in:
-  [../orchestrator/templates/tool-template.md](../orchestrator/templates/tool-template.md)
+  [../implementation-workflow/templates/tool-template.md](../implementation-workflow/templates/tool-template.md)
   (the same file `requirement-understanding`/orchestrator print as a bare
   nudge — reused here rather than duplicated)
 
@@ -91,38 +90,46 @@ update. If "leave as-is", skip to Step 5.
    - Anything else an automated agent should know before touching this repo
      (the "Notes" section) — optional, skip if the user has nothing to add.
 3. Write `docs/tool.md` using
-   [../orchestrator/templates/tool-template.md](../orchestrator/templates/tool-template.md)'s
+   [../implementation-workflow/templates/tool-template.md](../implementation-workflow/templates/tool-template.md)'s
    structure, filled in with the answers above. Leave a section's body empty
    (matching the template's placeholder comment) if nothing applies rather
    than inventing content.
 
-## Step 4 — Report CI and ADR Readiness
+## Step 5 — Report CI, ADR, and Manual-Test Readiness
 
 Neither of these is created here — both are produced by the pipeline itself
 when a task needs them — but a user adopting the plugin should know where they
 stand before the first run.
 
 ```bash
-ls .github/workflows/*.yml 2>/dev/null
+ls .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null
 test -d docs/adr && ls docs/adr/ || echo "no docs/adr yet"
+test -d docs/manual-tests && ls docs/manual-tests/ || echo "no docs/manual-tests yet"
 ```
 
 Report, without fixing:
 
-- **CI.** Does a workflow run the test command from Step 3, on pull requests to
-  the default branch? If not, tell the user that the first task with an
-  `automated` strategy will include CI bootstrap in its test commit (per
+- **CI.** Does a workflow run the test command from Step 4, on pull requests to
+  the default branch? If not, tell the user that the first task with automated
+  tests will include CI bootstrap in its test commit (per
   `../../docs/test-first.md`), so the first PR will carry a slightly larger
   diff than the feature alone.
 - **`docs/adr/`.** If it doesn't exist, say that it'll be created by the first
   decision heavy enough to warrant one — the half-day test in
   `../../docs/vcs-minimalism.md` — and point them at that document so the bar
-  isn't a surprise.
+  isn't a surprise. If it exists but has no `index.md`, mention that too: the
+  index is part of the ADR contract, and the first ADR this plugin writes will
+  create it.
+- **`docs/manual-tests/`.** Behaviour a test runner can't check gets a
+  committed procedure here, indexed by `docs/manual-tests/index.md` and linked
+  from `README.md` (`../../docs/test-first.md`). If the directory doesn't
+  exist, say the first task with a manual test will create it along with the
+  README link — so that link appearing in a feature PR isn't a surprise.
 - **Legacy directories.** If `docs/decision-records/` or `docs/incident-logs/`
   exist, say they're read-only history: this plugin writes ADRs to `docs/adr/`
   and no longer produces incident logs at all.
 
-## Step 5 — Offer to Ignore the Scratch Workspace
+## Step 6 — Offer to Ignore the Scratch Workspace
 
 Each run writes its cross-phase handoff files to
 `.claude/implementation-workflow/<task-id>/` — requirements report, impact
@@ -155,7 +162,7 @@ settings, project-scoped agents or commands), say so rather than proposing the
 blanket entry — `.claude/implementation-workflow/` and `.claude/task-splitter/`
 are the narrower pair that covers only the scratch workspaces.
 
-## Step 6 — Summary
+## Step 7 — Summary
 
 Report what's in place and what still needs the user's action:
 
@@ -164,7 +171,8 @@ Report what's in place and what still needs the user's action:
 - `CLAUDE.md`: present / missing (run `/init`)
 - `docs/tool.md`: created / updated / left as-is, with its path
 - CI: runs the test suite / exists but doesn't cover it / absent
-- `docs/adr/`: present / will be created on first need
+- `docs/adr/` and its `index.md`: present / will be created on first need
+- `docs/manual-tests/`: present / will be created on first need
 - `.gitignore`: already covers `.claude/` / entry added (uncommitted) / left
   alone at the user's request
 

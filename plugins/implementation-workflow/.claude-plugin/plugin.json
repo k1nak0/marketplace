@@ -1,9 +1,9 @@
 {
   "name": "implementation-workflow",
   "version": "3.0.0",
-  "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, human-approved test-first specification, implementation against frozen tests, automated and human review, history cleanup, and PR.",
+  "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, a human-approved test-first specification (automated tests plus committed manual test procedures), implementation against frozen tests, automated and human review, history cleanup, and PR.",
   "author": {
-    "name": "k1nak0"
+    "name": "dango"
   },
   "homepage": "https://github.com/k1nak0/marketplace",
   "repository": "https://github.com/k1nak0/marketplace",
@@ -17,7 +17,7 @@
     "github-issues"
   ],
   "skills": [
-    "./skills/orchestrator",
+    "./skills/implementation-workflow",
     "./skills/onboarding",
     "./skills/requirement-understanding",
     "./skills/issue-refinement",

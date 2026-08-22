@@ -1,5 +1,4 @@
 ---
-name: requirement-understanding
 description: Establish what to implement this run — let the user choose a task from a GitHub Map Issue (or interview them for a standalone requirement), then put the task's content in front of them for scrutiny before any work starts. Returns a verdict of ready or needs-refinement. Writes requirements-report.md. Use for Phase 1 of implementation-workflow, at the start of every run.
 argument-hint: "<Map Issue number/URL, or a feature description>"
 model: sonnet
@@ -26,7 +25,13 @@ human, and the cheapest possible moment to find out it's wrong.
 
 ---
 
-## Step 0 — Generate a Task ID and Scratch Directory
+## Step 0 — Establish the Task ID and Scratch Directory
+
+**If the orchestrator gave you an existing `TASK_ID`, use it** — that happens
+when Phase 2 refined the Issue and sent the run back here. Reusing it keeps one
+run's artifacts in one directory instead of orphaning the first pass.
+
+Otherwise generate one:
 
 ```bash
 TASK_ID="task-$(date +%Y%m%d-%H%M%S)"
@@ -111,16 +116,30 @@ test -f docs/tool.md && echo present || echo missing
 ```
 
 If missing, print
-[../orchestrator/templates/tool-template.md](../orchestrator/templates/tool-template.md)
+[../implementation-workflow/templates/tool-template.md](../implementation-workflow/templates/tool-template.md)
 and tell the user it's optional but helps later phases pick the right test and
 verification commands. Continue regardless — this never blocks.
 
 ## Step 5 — Write the Requirements Report
 
-Write `.claude/implementation-workflow/<task-id>/requirements-report.md`:
-Project Goals / Core Features / Constraints / Definition of Done, plus the
-header in [reference.md](reference.md) recording `source_type` and, for
-`map-issue`, the Map Issue and Task Issue numbers.
+Write `.claude/implementation-workflow/<task-id>/requirements-report.md` to the
+structure in [reference.md](reference.md): the header, then Project Goals /
+Core Features / Constraints / **External Dependencies** / Definition of Done.
+
+**External Dependencies is not optional and never left blank.** Phase 5 reads
+exactly one line of it to decide whether to run `library-researcher` at all:
+
+```markdown
+## External Dependencies
+
+**New library required:** yes | no
+<If yes: library name, use case, minimum version, licence — one line each.>
+```
+
+For Input B you asked about this in the interview. For Input A, derive it from
+the Task Issue's Description and Implementation Sketch; if the Issue is silent
+and you can't tell, ask the user outright rather than defaulting to `no` — a
+wrong `no` here silently skips the library research the plan then needs.
 
 If Phase 2 revised the Issue before you got here, write the report from the
 **revised** Issue body — re-read it with `gh issue view` rather than working

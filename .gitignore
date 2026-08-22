@@ -1,6 +1,6 @@
-# Workspace inter-phase data (task-specific, not for version control)
-.claude/workspaces/
-.claude/.claude-status.json
+# Agent scratch workspaces (task-specific, not for version control)
+.claude/task-splitter/
+.claude/implementation-workflow/
 
 # Node / pnpm
 node_modules/

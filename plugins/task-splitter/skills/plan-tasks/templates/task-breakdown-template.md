@@ -12,7 +12,7 @@
 ### Task 1: <Title>
 
 **Depends on:** none
-**Verification Method:** manual | automated
+**Verification Method:** automated | manual | mixed
 **Design reference:** docs/design/<slug>.md#<anchor>
 
 **Description**
@@ -30,7 +30,7 @@ codebase investigation" is a valid value.>
 ### Task 2: <Title>
 
 **Depends on:** Task 1
-**Verification Method:** manual | automated
+**Verification Method:** automated | manual | mixed
 **Design reference:** docs/design/<slug>.md#<anchor>
 
 **Description**

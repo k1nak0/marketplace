@@ -36,33 +36,34 @@ valid and useful answer.>
 ### CLAUDE.md Compliance
 <Every CLAUDE.md rule that applies here, confirmed as followed.>
 
-## Test Strategy
+## Specification
 
-**Test Strategy:** automated | manual
-**Why:** <One line. What made this the right call — and, if manual, why an
-automated test genuinely cannot express the behaviour.>
+Every acceptance criterion appears in exactly one place: an automated test
+case, a manual test step, or the Out-of-Scope table at the end. The first two
+are written and human-approved BEFORE any implementation exists, then committed
+and frozen in one `test(...)` commit. Describe behaviour, not units.
 
-**CI:** present | extend (`<file>`, `<what's missing>`) | bootstrap (`<test command>`)
+**CI:** present | extend (`<file>`, `<what's missing>`) | bootstrap (`<test command>`) | n/a — no automated tests
 
-### If automated — Test Cases
+### Automated Test Cases
 
-Written and human-approved BEFORE any implementation exists, then committed and
-frozen. Only unit-level tests (no live I/O, no integration/e2e) are in scope.
-Describe behaviour, not units.
+Unit-level only — no live I/O, no integration/e2e. "none" is a valid entry.
 
-| Test ID | Description | Input | Expected Output | Out-of-Scope? |
-|---------|-------------|-------|-----------------|---------------|
+| Test ID | Description | Input | Expected Output |
+|---------|-------------|-------|-----------------|
 
-### Test Runner Command
-```bash
-```
+**Test runner command:** `<command>`
 
-### If manual — Verification Steps
+### Manual Test Steps
 
-<Numbered steps, each with an action and the exact observation that
-constitutes a pass. Name any docs/tool.md tool a step needs. This procedure is
-approved at the Phase 8 gate, posted to the Issue, and executed verbatim by
-the implementer — it is never committed.>
+Committed to `docs/manual-tests/<slug>.md` and frozen alongside the automated
+tests — the implementer may not edit them either. "none" is a valid entry, and
+is the common case for pure logic changes.
+
+| Step | Action | Pass criterion | Why not automated |
+|------|--------|----------------|-------------------|
+
+<Both sections empty is not a valid plan.>
 
 ## Documentation Update Plan
 
@@ -73,7 +74,9 @@ this list — see docs/vcs-minimalism.md.>
 
 ## Out-of-Scope
 
-- OOS-001: UI/visual regression tests
-- OOS-002: Tests requiring live external API connections
-- OOS-003: Integration tests
-- OOS-004: System/end-to-end tests
+Criteria deliberately not specified this task. Listed, not omitted — the human
+at the Phase 8 gate needs to see what is being left out on purpose.
+
+| ID | Not specified | Why |
+|----|---------------|-----|
+| OOS-001 | | |

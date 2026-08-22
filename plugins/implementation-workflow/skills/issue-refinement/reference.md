@@ -70,17 +70,25 @@ mechanically valid:
 - **Dropping a row:** close the Issue with a comment naming the decision that
   obsoleted it, and set its status cell to `dropped` rather than deleting the
   row — a reader tracing a "Depends on: #124" needs to find #124.
-- **Statuses** stay in the existing vocabulary: `not-started`, `in-progress`,
-  `blocked`, `done`, `dropped`.
+- **Statuses** stay in the existing vocabulary, which is the one declared in
+  the Map Issue template: `not-started`, `in-progress`, `blocked`, `done`,
+  `dropped`.
+- **The `PR` column** is written by `implementation-workflow`, not here. Leave
+  existing cells alone; give a new row an empty one.
 
 Edit the table with the same whole-body-rewrite pattern the rest of the plugin
 uses:
 
 ```bash
-gh issue view <map-issue-number> --json body -q .body > /tmp/map-body.md
-# edit /tmp/map-body.md
-gh issue edit <map-issue-number> --body-file /tmp/map-body.md
+gh issue view <map-issue-number> --json body -q .body    # read it, edit it, write it back
+gh issue edit <map-issue-number> --body-file - <<'MAP_BODY'
+<full updated body>
+MAP_BODY
 ```
+
+Heredoc rather than a temp file, and `--body-file -` rather than
+`--body "<string>"` — markdown tables and code fences do not survive shell
+escaping intact.
 
 Rewriting an Issue body loses the old text, so **every body edit is
 accompanied by a comment** recording what changed and why:
@@ -104,8 +112,9 @@ contains only implementation.
 - Branch `docs/<issue#>-<slug>`, cut from the freshest default branch.
 - One commit, `docs(<scope>): <what the docs now describe>`. The body carries
   the *why*: what they said, what was wrong, what they say now.
-- Contents: `docs/design/*`, `docs/prd.md`, and any ADR. Nothing else — no
-  source, no `.claude/`.
+- Contents: `docs/design/*`, `docs/prd.md`, and any ADR plus its
+  `docs/adr/index.md` row. Nothing else — no source, no `.claude/`.
+- Any ADR in it is `accepted`, not `draft` — see SKILL.md Step 3 for why.
 - PR body: what changed and why, which Issues were updated alongside it, and
   the Issue this refinement came out of.
 
