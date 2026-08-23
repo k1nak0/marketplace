@@ -94,19 +94,60 @@ manifest-file auto-detection heuristics.
 
 ---
 
-## Shared Conventions (both plugins)
+## light-workflow Plugin
 
-- **No bundled MCP servers.** Neither plugin ships a `.mcp.json`. GitHub
+Takes a requirement straight from a discussion with the user to a PR, without
+the gates `implementation-workflow` exists to enforce. One user-invocable
+orchestrator skill, no subagents, no sub-skills, no workspace directory. Entry
+point: `/light-workflow:light-workflow` (skill at `skills/light-workflow/`).
+
+| Phase | Name | Mechanism | Output |
+|-------|------|-----------|--------|
+| 0 | Branch Preparation | Orchestrator inline | `<type>/<slug>` cut from the current tip of the default branch — or the current branch reused, if it already contains that tip |
+| 1 | Requirement Discussion | Orchestrator inline | a five-point understanding written back and confirmed **in the conversation**; no file |
+| 2 | Implementation | Orchestrator inline | **uncommitted** source changes, source comments carrying local *why*, any `draft` ADR, a drafted verification procedure |
+| 3 | Approval Gate | Orchestrator inline (`AskUserQuestion`) | `approve` / `request-changes`; uncapped send-back loop to Phase 2 |
+| 4 | Commit, Push, PR | Orchestrator inline | ADRs flipped to `accepted`, the commit series, `git push -u`, PR opened (not merged) |
+
+**What it deliberately does not have**, and must not grow back: test code (it
+runs the project's existing checks but writes none), a committed verification
+procedure, any GitHub Issue interaction, an automated review pass, and any file
+under `.claude/`. Its verification procedure lives in the PR body; the reason
+that differs from `implementation-workflow`'s committed `docs/manual-tests/` is
+that this plugin has no specification freeze, so the procedure is a run-time
+artifact rather than a contract. Written up in
+`plugins/light-workflow/docs/vcs-minimalism.md` §1 and in ADR-0001.
+
+**What it keeps, unchanged from `implementation-workflow`:** source code as the
+only *how* in VCS, the three *why* channels with the same half-day test,
+nothing committed before human approval, and a history that is the shape of the
+change rather than of the work (Phase 2 runs no `git` beyond reads — the whole
+implementation is uncommitted until Phase 4).
+
+The full contract — the discussion question bank, the "stop and ask" test, the
+verification-procedure format, the PR body contract, and a divergence table
+against `implementation-workflow` — is in
+`plugins/light-workflow/skills/light-workflow/reference.md`.
+
+---
+
+## Shared Conventions (all three plugins)
+
+- **No bundled MCP servers.** No plugin ships a `.mcp.json`. GitHub
   operations go through the `gh` CLI. Code search and library-doc lookup
   default to built-in tools (`Grep`/`Glob`/`Read`, `WebSearch`/`WebFetch`).
   Project-specific MCP tools (a code-search server, a docs server, a
   Playwright/Godot MCP for verification, etc.) are declared by the
   *consuming* project in its own `docs/tool.md`; skills/agents `ToolSearch`
-  for them by name when `docs/tool.md` mentions one. Both orchestrators check
-  for `docs/tool.md` at startup and print a starter template if it's missing
-  — this is a nudge, not a requirement. `implementation-workflow`'s
-  `onboarding` skill is where a user actually resolves that nudge instead of
-  dismissing it.
+  for them by name when `docs/tool.md` mentions one. The `task-splitter` and
+  `implementation-workflow` orchestrators check for `docs/tool.md` at startup
+  and print a starter template if it's missing — this is a nudge, not a
+  requirement. `light-workflow` makes the same check but only mentions the file
+  in one line, deliberately: printing the template would mean a third copy of
+  `tool-template.md` to keep in sync, for a plugin whose whole premise is less
+  ceremony. `implementation-workflow`'s `onboarding` skill is where a user
+  actually resolves that nudge instead of dismissing it, whichever plugin
+  raised it.
 - **No custom session-management infrastructure.** No SessionStart hooks, no
   `status.json` state machine. Cross-phase handoff is plain markdown files
   under `.claude/task-splitter/<task-id>/` or
@@ -117,7 +158,10 @@ manifest-file auto-detection heuristics.
   interrupted, resuming is manual: tell the orchestrator which task directory
   to continue, and it infers what's done from which files already exist there —
   with the one exception that uncommitted implementation work does not survive
-  a restart.
+  a restart. `light-workflow` takes this further and keeps **no** files at all:
+  it runs inline in one conversation, so after a restart only the branch and
+  the working tree remain, and it re-confirms the requirement rather than
+  inferring it.
 - **VCS minimalism.** The *how* is carried by source code alone — plans,
   reports, review findings, and implementation narrative go to Issues and PR
   bodies, never to a committed file. The *why* always goes into VCS, in
@@ -125,14 +169,21 @@ manifest-file auto-detection heuristics.
   commit message body (reasoning spanning several), or an ADR (any decision a
   human would need half a day or more to reverse). Each plugin carries its own
   copy of this policy at `plugins/<plugin>/docs/vcs-minimalism.md` because
-  plugins install independently — **change one, change both.**
-- **Three cross-plugin pairs are duplicated on purpose**, because a plugin has
-  to work with the other one absent and so cannot link into it: the two
-  `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies,
-  and the Map Issue table contract (`task-splitter`'s
-  `map-issue-template.md` ↔ `implementation-workflow`'s `docs/map-issue.md`).
-  Keep them in sync by hand. Duplication *within* a plugin is not in this
-  category — extract it into that plugin's `docs/` and link to it.
+  plugins install independently — there are now **three** copies, so
+  **change one, change all three.** The *why* routing (§2) and the ADR rules
+  (§3) are the same policy in all three and must stay that way; the one
+  sanctioned divergence is in `light-workflow`'s §1, where the verification
+  procedure goes to the PR body instead of `docs/manual-tests/`, and it is
+  marked as a divergence in the file itself.
+- **Three cross-plugin duplications exist on purpose**, because a plugin has to
+  work with the others absent and so cannot link into them: the three
+  `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies
+  (`light-workflow` deliberately has none), and the Map Issue table contract
+  (`task-splitter`'s `map-issue-template.md` ↔ `implementation-workflow`'s
+  `docs/map-issue.md`). Keep them in sync by hand. Duplication *within* a
+  plugin is not in this category — extract it into that plugin's `docs/` and
+  link to it. If a fourth workflow ever needs a fourth policy copy, revisit the
+  arrangement instead (ADR-0001's last consequence).
 - **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
   Context / Decision / Consequences / Alternatives Considered) plus
   `docs/adr/index.md`, updated in the same commit as the ADR it describes.
@@ -143,7 +194,10 @@ manifest-file auto-detection heuristics.
   after the review gate — and only ADRs from *this run*, never someone else's
   draft. An ADR from `issue-refinement` (Phase 2) is written `accepted`
   directly, because its doc PR *is* the change that ships the decision and has
-  no later gate; the same holds for a `task-splitter` Phase 4 ADR.
+  no later gate; the same holds for a `task-splitter` Phase 4 ADR. A
+  `light-workflow` ADR follows the first path in miniature: written `draft` in
+  its Phase 2, flipped to `accepted` in its Phase 4 after the approval gate, by
+  the orchestrator itself and only for ADRs that run wrote.
   `docs/decision-records/` and `docs/incident-logs/` are frozen historical
   reference; no new entries.
 - **`docs/manual-tests/`** holds one committed procedure per feature area
@@ -154,7 +208,9 @@ manifest-file auto-detection heuristics.
   frozen in the same `test(...)` commit at Phase 8; the implementer may edit
   neither. The **record of one execution** is not committed — that's a run log
   and goes to the PR body and the Issue. There is therefore **always** a test
-  commit, including for a task whose specification is entirely manual.
+  commit, including for a task whose specification is entirely manual. All of
+  this is `implementation-workflow`'s; `light-workflow` writes neither kind of
+  test and hands its verification procedure to the PR body instead.
 - **`docs/design/`** holds one behavior-only doc per feature — observable
   inputs/outputs, interfaces, constraints, state transitions. No language,
   library, algorithm, or file-layout detail. **No `## Implementation Notes`
@@ -164,9 +220,9 @@ manifest-file auto-detection heuristics.
 - **`docs/prd.md`** is a single living file: product goals, scope boundaries,
   and links into `docs/design/`. Updated incrementally by `task-splitter`,
   never overwritten wholesale.
-- **No tool allowlists.** Neither plugin's skills declare `allowed-tools` and
-  no agent carries a "Tool Discipline" section — both plugins assume a
-  sandboxed environment. Restrictions that are *behavioural* rather than
+- **No tool allowlists.** No plugin's skills declare `allowed-tools` and no
+  agent carries a "Tool Discipline" section — all three assume a sandboxed
+  environment. Restrictions that are *behavioural* rather than
   mechanical are still stated as rules (the implementer not touching frozen
   tests, investigation agents not editing source).
 - **Markdown link integrity is CI-enforced.** `.github/workflows/markdown-link-check.yml`
