@@ -22,7 +22,16 @@
       "author": {
         "name": "dango"
       }
+    },
+    {
+      "name": "light-workflow",
+      "source": "./plugins/light-workflow",
+      "description": "A single-skill lightweight implementation workflow: branch preparation, a requirement discussion with the user, implementation that consults the user whenever it hits a real fork, one human approval gate, then commit, push, and PR. No test freeze, no automated review gate, no Issue registration — but the same VCS minimalism: source code is the only *how*, and every *why* lands in a comment, a commit message, or an ADR.",
+      "version": "1.0.0",
+      "author": {
+        "name": "dango"
+      }
     }
   ],
-  "description": "Development workflow plugins: split an epic into GitHub Issues, then take one Issue to a reviewed PR through a test-first pipeline."
+  "description": "Development workflow plugins: split an epic into GitHub Issues and take one Issue to a reviewed PR through a test-first pipeline, or take a small change from a discussion to a PR in five inline phases."
 }
