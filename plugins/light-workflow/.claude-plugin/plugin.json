@@ -1,0 +1,21 @@
+{
+  "name": "light-workflow",
+  "version": "1.0.0",
+  "description": "A single-skill lightweight implementation workflow: branch preparation, a requirement discussion with the user, implementation that consults the user whenever it hits a real fork, one human approval gate, then commit, push, and PR. No test freeze, no automated review gate, no Issue registration — but the same VCS minimalism: source code is the only *how*, and every *why* lands in a comment, a commit message, or an ADR.",
+  "author": {
+    "name": "dango"
+  },
+  "homepage": "https://github.com/k1nak0/marketplace",
+  "repository": "https://github.com/k1nak0/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "lightweight",
+    "adr",
+    "pull-request",
+    "manual-verification"
+  ],
+  "skills": [
+    "./skills/light-workflow"
+  ]
+}

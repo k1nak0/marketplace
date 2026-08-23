@@ -12,6 +12,7 @@ worse than no index.
 
 | # | Decision | Status | Date |
 |---|----------|--------|------|
+| [0001](0001-light-workflow-as-a-separate-plugin.md) | Ship the lightweight workflow as its own plugin, not as a mode of `implementation-workflow` | accepted | 2026-08-23 |
 
 Statuses: `draft` → `accepted`, then `superseded by ADR-NNNN` or `deprecated`.
 Once an ADR leaves `draft`, its `Context` and `Decision` are immutable; a
