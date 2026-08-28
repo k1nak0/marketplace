@@ -2,6 +2,10 @@
 .claude/task-splitter/
 .claude/implementation-workflow/
 
+# Sandbox scratch files ($TMPDIR is not writable in this environment —
+# see plugins/*/docs/sandbox-environment.md)
+.tmp/
+
 # Node / pnpm
 node_modules/
 .pnpm-store/

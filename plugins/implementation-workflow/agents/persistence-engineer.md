@@ -25,13 +25,15 @@ and you never run it.
 ## Read First
 
 The orchestrator's prompt gives you the path to this plugin's shared policy
-docs. Read these three:
+docs. Read these four:
 
 - `git-workflow.md` — the canonical series shape, the regroup procedure, and
   the push rules. This is your primary specification; follow it exactly.
 - `vcs-minimalism.md` — what goes in the commit body, what goes in the PR body,
   and the ADR lifecycle you complete here.
 - `map-issue.md` — how to edit the Map Issue body in Step 8.
+- `sandbox-environment.md` — you push and call `gh` in Step 5 and Step 6; its
+  §5 is why every push below names the branch explicitly instead of `-u`.
 
 ## Input
 
@@ -47,6 +49,7 @@ docs. Read these three:
 
 ```bash
 BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+WORK_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 git fetch origin "$BASE"
 BASE_SHA=$(git merge-base HEAD "origin/$BASE")
 git log --oneline "$BASE_SHA"..HEAD
@@ -138,9 +141,13 @@ rejection rules`, not `test: add tests`.
 
 ### Step 5 — Push
 
+This environment can't register upstream tracking (`sandbox-environment.md`
+§5), so every push names the branch explicitly — never `-u`, never a bare
+`HEAD`:
+
 ```bash
-git push -u origin HEAD                    # branch not yet on the remote
-git push --force-with-lease origin HEAD    # branch exists remotely and was rewritten
+git push origin "$WORK_BRANCH"                     # branch not yet on the remote, or any later push
+git push --force-with-lease origin "$WORK_BRANCH"  # branch exists remotely and was rewritten
 ```
 
 `--force-with-lease` only, never bare `--force`, and only ever on this run's

@@ -42,6 +42,8 @@ unchanged:
   divergences from `implementation-workflow`: [reference.md](reference.md)
 - What may land in VCS, the *why* routing, and the ADR rules:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
+- The filesystem/network constraints this entire run operates under:
+  [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
 ### What this plugin does not do
 
@@ -61,7 +63,16 @@ genuinely needs them, say so and point the user at
 
 ---
 
-## Step 0 — Look for `docs/tool.md`
+## Step 0 — Preliminary Checks
+
+**Read the sandbox doc first, before anything else runs.** This entire run
+happens inside a sandboxed environment —
+[../../docs/sandbox-environment.md](../../docs/sandbox-environment.md) is not
+optional background reading, it governs every file write and network call
+below: Phase 0's branch setup, Phase 2's file writes and any lookups, and
+Phase 4's commit, push, and PR.
+
+**Then look for `docs/tool.md`.**
 
 ```bash
 test -f docs/tool.md && echo present || echo missing
@@ -269,10 +280,12 @@ work. The message format, and what belongs in the body, is in
 [reference.md](reference.md) §5; the short version is that the body is where
 every cross-file *why* from Phase 2 goes, with `Refs: ADR-NNNN` when one exists.
 
-**3. Push.**
+**3. Push.** This environment can't register upstream tracking
+(`sandbox-environment.md` §5), so name the branch explicitly — never `-u`,
+never a bare `HEAD`:
 
 ```bash
-git push -u origin HEAD
+git push origin "$(git rev-parse --abbrev-ref HEAD)"
 ```
 
 `--force-with-lease`, never bare `--force`, and only after rewriting a branch

@@ -21,6 +21,9 @@ This skill is where a user resolves them, once, up front.
   [../implementation-workflow/templates/tool-template.md](../implementation-workflow/templates/tool-template.md)
   (the same file `requirement-understanding`/orchestrator print as a bare
   nudge — reused here rather than duplicated)
+- The filesystem/network constraints this run operates under (you write
+  `docs/tool.md` and shell out to `gh` in Step 1):
+  [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
 ---
 

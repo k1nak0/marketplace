@@ -17,6 +17,13 @@ not commit — your only output is the report below, written into the run's
 scratch workspace under `.claude/`, which is never committed (see this
 plugin's `vcs-minimalism.md`).
 
+This run happens inside a sandboxed environment — see this plugin's
+`sandbox-environment.md` (in the policy docs path the orchestrator gave you)
+for what's readable, what's writable, and what reaches the network. Your one
+write (the report below) lands inside the project working tree, so it's
+unaffected, but read it before assuming any other location is available to
+you.
+
 If `docs/tool.md` documents a project-specific code-search MCP tool (a symbol
 index, an LSP-backed search, etc.), `ToolSearch` for it and prefer it over raw
 `Grep`/`Glob` — it'll usually be more precise. If `docs/tool.md` doesn't exist

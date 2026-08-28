@@ -23,6 +23,8 @@ functions to cover.
 - Criterion routing and CI rules: [reference.md](reference.md)
 - Where the plan itself is allowed to live: [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 - The test-first contract the plan feeds: [../../docs/test-first.md](../../docs/test-first.md)
+- The filesystem/network constraints this run operates under (you write the
+  plan file and post it via `gh`): [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
 ---
 

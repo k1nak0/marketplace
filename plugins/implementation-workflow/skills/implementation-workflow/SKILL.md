@@ -102,11 +102,17 @@ and use its parent directory. Record the result as `POLICY_DOCS`. Every
 `Agent(...)` prompt below includes the line:
 
 ```
-Policy docs: <POLICY_DOCS>/  (vcs-minimalism.md, git-workflow.md, test-first.md, map-issue.md)
+Policy docs: <POLICY_DOCS>/  (vcs-minimalism.md, git-workflow.md, test-first.md, map-issue.md, sandbox-environment.md)
 ```
 
 `map-issue.md` is also yours: every Map Issue read or edit you make inline —
 Phases 1, 9, 10 and 13 — follows it.
+
+**Read `<POLICY_DOCS>/sandbox-environment.md` yourself, now, before Phase 1
+starts.** This entire run — every phase, inline or delegated — happens inside
+a sandboxed environment, and this doc is not optional background for you
+either: it's why `persistence-engineer` (Phase 12) and `issue-refinement`
+(Phase 2) push naming the branch explicitly instead of using `-u`.
 
 ## Step 0b — Check for `docs/tool.md`
 

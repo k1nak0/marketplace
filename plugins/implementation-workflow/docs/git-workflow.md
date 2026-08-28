@@ -4,6 +4,11 @@ Shared policy. Any agent or skill in this plugin that runs `git` or `gh`
 follows it. It exists so that what reaches the default branch is the *shape of
 the change*, never the *shape of the work that produced it*.
 
+This doc assumes the network and filesystem constraints in
+`sandbox-environment.md` — read that one first if you haven't. It's why every
+push below names the branch explicitly instead of `-u`, and why interactive
+rebase (below) isn't an option.
+
 ---
 
 ## 1. Branches
@@ -192,9 +197,13 @@ environment. The soft-reset regroup above needs no editor and is deterministic.
 
 ### Pushing
 
+This environment can't register upstream tracking
+(`sandbox-environment.md` §5), so every push names the branch explicitly —
+never `-u`/`--set-upstream`, and never a bare `HEAD`:
+
 ```bash
-git push -u origin HEAD                    # first push of the branch
-git push --force-with-lease origin HEAD    # after any rewrite of a pushed branch
+git push origin "<branch-name>"                     # first push, and every push after
+git push --force-with-lease origin "<branch-name>"  # after any rewrite of a pushed branch
 ```
 
 - `--force-with-lease`, never bare `--force`.

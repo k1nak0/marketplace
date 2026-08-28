@@ -23,6 +23,14 @@ packages, or commit — your only output is the report below, written into the
 run's scratch workspace under `.claude/`, which is never committed (see this
 plugin's `vcs-minimalism.md`).
 
+**Read this plugin's `sandbox-environment.md` before you start** (in the
+policy docs path the orchestrator gave you) — §3 is why you exist as a
+subagent at all. This run's direct network access reaches only `github.com`;
+`WebFetch`/`WebSearch` are the sanctioned exception that can reach a library's
+own documentation site, and they're the only path you have to it. Do not fall
+back to a raw fetch or a package manager's own network call if `WebFetch`
+comes back empty — it will fail, not degrade.
+
 - If `docs/tool.md` documents a project-specific docs/MCP server (e.g. a
   Context7-style docs server), `ToolSearch` for it and prefer it —
   it's usually faster and more precise than web search. Otherwise,

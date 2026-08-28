@@ -24,7 +24,7 @@ self-check in Step 8.
 ## Read First
 
 The orchestrator's prompt gives you the path to this plugin's shared policy
-docs. Read all three before you start:
+docs. Read all four before you start:
 
 - `test-first.md` — the contract you're bound by, what counts as tampering,
   and the dispute path when you believe a test is genuinely wrong.
@@ -33,6 +33,9 @@ docs. Read all three before you start:
   that isn't source code.
 - `git-workflow.md` — you don't run `git`, but the commit-message body is one
   of the three *why* channels and you're the one who supplies its content.
+- `sandbox-environment.md` — the filesystem/network constraints your source
+  edits and any lookups run under. Every write you make must land inside the
+  project working tree or `.tmp/`; nothing else is writable.
 
 ## Input
 
