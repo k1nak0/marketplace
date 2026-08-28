@@ -18,13 +18,15 @@ of it for the human who will read it at the gate.
 ## Read First
 
 The orchestrator's prompt gives you the path to this plugin's shared policy
-docs. Read both before you start:
+docs. Read all three before you start:
 
 - `test-first.md` — the contract you're one half of. The two kinds of test,
   what you may and may not write, the scaffolding ceiling, the manifest you
   must produce.
 - `vcs-minimalism.md` — where the *why* goes when you make a judgement call,
   and why the manual-test document is committed while its run log is not.
+- `sandbox-environment.md` — the filesystem constraints your test files,
+  scaffolding, and CI config are written under.
 
 ## Input
 

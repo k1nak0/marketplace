@@ -29,6 +29,8 @@ Two failure modes to avoid, in order of cost:
 - What may be written to the repository at all:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 - Branch and PR mechanics: [../../docs/git-workflow.md](../../docs/git-workflow.md)
+- The filesystem/network constraints this run operates under (Step 4 writes
+  and pushes): [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
 ---
 
@@ -111,11 +113,12 @@ Design-doc churn does not belong in the implementation PR's diff. Follow
 
 ```bash
 BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+BRANCH="docs/<issue#>-<slug>"
 git fetch origin "$BASE"
-git switch --create "docs/<issue#>-<slug>" "origin/$BASE"
+git switch --create "$BRANCH" "origin/$BASE"
 git add -- docs/design/... docs/prd.md docs/adr/... docs/adr/index.md
 git commit   # docs(<scope>): <what behaviour the docs now describe>
-git push -u origin HEAD
+git push origin "$BRANCH"   # never -u — this environment can't register upstream tracking (sandbox-environment.md §5)
 gh pr create --base "$BASE" --title "..." --body-file - <<'PR_BODY'
 …
 PR_BODY

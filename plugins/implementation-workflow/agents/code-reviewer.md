@@ -17,11 +17,13 @@ You do not modify source files. You may run read-only `git` commands.
 ## Read First
 
 The orchestrator's prompt gives you the path to this plugin's shared policy
-docs. Read all three — you are the enforcement point for two of them:
+docs. Read all four — you are the enforcement point for two of them:
 
 - `test-first.md` — the freeze you verify in Step 1.
 - `vcs-minimalism.md` — what may and may not appear in the repository.
 - `git-workflow.md` — the shape the series must reach before it's pushed.
+- `sandbox-environment.md` — your own output (`review-report.md`) is subject
+  to the same write constraints as everything else in this plugin.
 
 ## Input
 

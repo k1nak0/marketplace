@@ -175,15 +175,24 @@ against `implementation-workflow` — is in
   sanctioned divergence is in `light-workflow`'s §1, where the verification
   procedure goes to the PR body instead of `docs/manual-tests/`, and it is
   marked as a divergence in the file itself.
-- **Three cross-plugin duplications exist on purpose**, because a plugin has to
+- **Four cross-plugin duplications exist on purpose**, because a plugin has to
   work with the others absent and so cannot link into them: the three
   `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies
-  (`light-workflow` deliberately has none), and the Map Issue table contract
+  (`light-workflow` deliberately has none), the Map Issue table contract
   (`task-splitter`'s `map-issue-template.md` ↔ `implementation-workflow`'s
-  `docs/map-issue.md`). Keep them in sync by hand. Duplication *within* a
-  plugin is not in this category — extract it into that plugin's `docs/` and
-  link to it. If a fourth workflow ever needs a fourth policy copy, revisit the
-  arrangement instead (ADR-0001's last consequence).
+  `docs/map-issue.md`), and the two `docs/sandbox-environment.md` copies
+  (`light-workflow` ↔ `implementation-workflow`) documenting the sandboxed
+  environment every file-writing or network-calling agent/skill in either
+  plugin runs in — what's readable, what's writable, which hosts are
+  reachable directly vs. only through `WebFetch`/`WebSearch`, and why a push
+  must always name its branch explicitly instead of using `-u`. `task-splitter`
+  does not yet carry a copy, deliberately out of scope for the change that
+  introduced this pair; it touches the filesystem and `gh` under the same
+  constraints and would need one if it starts running under this sandbox too.
+  Keep the existing copies in sync by hand. Duplication *within* a plugin is
+  not in this category — extract it into that plugin's `docs/` and link to it.
+  If a fifth workflow ever needs a fifth policy copy, revisit the arrangement
+  instead (ADR-0001's last consequence).
 - **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
   Context / Decision / Consequences / Alternatives Considered) plus
   `docs/adr/index.md`, updated in the same commit as the ADR it describes.

@@ -24,6 +24,9 @@ human, and the cheapest possible moment to find out it's wrong.
   [../../docs/map-issue.md](../../docs/map-issue.md)
 - Repository policy this phase inherits:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
+- The filesystem/network constraints this run operates under (you write
+  `requirements-report.md` and claim the Issue via `gh`):
+  [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
 ---
 
