@@ -48,7 +48,7 @@ most tasks end up with something in more than one:
 | A runner genuinely cannot | A manual test step | `docs/manual-tests/<slug>.md` — committed |
 | Deliberately not specified this task | An out-of-scope row | The plan's Out-of-Scope section |
 
-Both kinds are written by `test-writer`, approved by the human at the Phase 8
+Both kinds are written by `test-writer`, approved by the human at the Phase 9
 gate, and frozen in the same test commit. The only difference is that one is
 executable and the other isn't (`../../docs/test-first.md`).
 
@@ -87,10 +87,10 @@ isn't automated. Name any `docs/tool.md` verification tool a step needs.
 
 Either table may be empty; say "none" explicitly rather than omitting the
 section. **Both empty is not a valid plan** — that task has no specification to
-approve at the Phase 8 gate.
+approve at the Phase 9 gate.
 
 Mark anything deliberately unspecified as out-of-scope rather than dropping it
-silently; the human sees these tables' consequences at the Phase 8 gate.
+silently; the human sees these tables' consequences at the Phase 9 gate.
 
 ### 5. Compose the Plan
 

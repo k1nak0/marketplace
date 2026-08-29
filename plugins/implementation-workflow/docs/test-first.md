@@ -1,6 +1,6 @@
-# Test-First — The Contract Between `test-writer` and `implementer`
+# Test-First — The Contract Between `test-writer`, `test-reviewer`, and `implementer`
 
-Shared policy for Phases 7–11.
+Shared policy for Phases 7–12.
 
 **This is test-first, not TDD.** The difference is not cosmetic:
 
@@ -32,10 +32,10 @@ A task's specification has two halves, and most tasks have both:
 | Lives in | The project's test suite | `docs/manual-tests/<slug>.md` |
 | Checked by | The test runner, in CI | A human, following the steps |
 | Committed? | **Yes** | **Yes** |
-| Frozen after Phase 8? | **Yes** | **Yes** |
+| Frozen after Phase 9? | **Yes** | **Yes** |
 
 That is the *only* difference between them. Both state observable behaviour in
-the requirement's vocabulary, both are read by a human at the Phase 8 gate,
+the requirement's vocabulary, both are read by a human at the Phase 9 gate,
 both go into the same `test(...)` commit, and the implementer may edit neither.
 
 **There is always a test commit.** Even a task whose behaviour is entirely
@@ -66,12 +66,16 @@ execution. See "Executing the manual tests" below.
 Phase 7   test-writer writes the automated tests and the manual-test doc.
           No production code.
           Runs the automated ones → they must fail, for the right reason.
-Phase 8   Human reads both and approves them.
-          ├── request-changes → back to Phase 7
+Phase 8   test-reviewer reviews the candidate — fresh eyes, before any human
+          sees it.
+          ├── FAIL → back to test-writer (capped, automatic)
+          └── PASS → Phase 9
+Phase 9   Human reads both, plus test-reviewer's report, and approves them.
+          ├── request-changes → back to Phase 7 (through Phase 8 again)
           └── approve → commit them  (test(...): …, local only)   ← FREEZE POINT
-Phase 9   implementer makes the automated tests pass and executes the manual
+Phase 10  implementer makes the automated tests pass and executes the manual
           steps. Both documents are now immutable.
-Phase 10  code-reviewer verifies neither was touched.
+Phase 11  code-reviewer verifies neither was touched.
 ```
 
 ## What `test-writer` may write
@@ -95,6 +99,23 @@ Phase 10  code-reviewer verifies neither was touched.
 `test-writer` writes **no production code**. If it finds itself needing to, the
 scaffolding rule above is the ceiling — anything more means the task is
 underspecified, and it should halt and say so rather than start implementing.
+
+## What `test-reviewer` checks (Phase 8)
+
+Before any human sees the candidate specification, a fresh-context agent
+reviews it against everything above: that the automated tests fail for the
+right reason, that every acceptance criterion is covered and correctly
+bucketed, that assertions are observable and discriminating rather than
+tautological or internals-coupled, that manual steps carry a concrete pass
+criterion and an honest reason they aren't automated, that scaffolding stays
+within the signature-only ceiling, and that CI actually runs the suite. A FAIL
+sends the candidate back to `test-writer`, automatically, up to five times,
+before it ever reaches the Phase 9 human gate — see `agents/test-reviewer.md`
+for the full checklist and severity rubric.
+
+This does not make the human gate redundant: `test-reviewer` catches whether
+the specification is *internally sound*; the human is the only one who can
+judge whether it's the *right* specification for the requirement.
 
 ## What `implementer` may not do
 
@@ -166,7 +187,7 @@ implementer resumes under the original specification.
   point.
 - `test_command` may be `null` when `test_files` is empty.
 
-## How the freeze is verified (Phase 10)
+## How the freeze is verified (Phase 11)
 
 `code-reviewer` checks, mechanically, before reviewing anything else:
 

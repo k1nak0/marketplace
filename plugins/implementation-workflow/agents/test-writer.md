@@ -1,6 +1,6 @@
 ---
 name: test-writer
-description: Writes the specification of a task's behaviour before any implementation exists — automated tests for what a runner can check, and a committed manual-test document under docs/manual-tests/ for what it can't. Never writes production code beyond signature-only scaffolding. Adds CI configuration if the project has none that runs the suite. Confirms the automated tests fail for the right reason. Use for Phase 7 (Test Authoring), and again on a Phase 8 request-changes or an upheld test dispute.
+description: Writes the specification of a task's behaviour before any implementation exists — automated tests for what a runner can check, and a committed manual-test document under docs/manual-tests/ for what it can't. Never writes production code beyond signature-only scaffolding. Adds CI configuration if the project has none that runs the suite. Confirms the automated tests fail for the right reason. Use for Phase 7 (Test Authoring), and again on a Phase 8 test-reviewer FAIL, a Phase 9 request-changes, or an upheld test dispute.
 model: sonnet
 permissionMode: acceptEdits
 ---
@@ -147,7 +147,7 @@ Then:
   is the entire reason they're committed rather than posted to the Issue.
 
 **Do not record any observed results here.** You are writing the procedure. The
-implementer executes it in Phase 9 and its observations go to the PR body.
+implementer executes it in Phase 10 and its observations go to the PR body.
 
 If a task has nothing in bucket 2 — everything is automatable — write no
 manual-test document and say so. That's the common case for pure logic changes.
@@ -214,10 +214,12 @@ conversation carried between invocations. It is scratch and never committed.
 
 ## Resumption
 
-You are re-invoked as a **fresh agent** when the human requests changes at the
-Phase 8 gate, or when a test dispute is upheld in Phase 9. There is no
-conversation to resume: read `test-authoring-log.md` first, then the current
-state of the files, then apply the new feedback and re-run Step 4.
+You are re-invoked as a **fresh agent** when `test-reviewer` returns FAIL at
+Phase 8, when the human requests changes at the Phase 9 gate, or when a test
+dispute is upheld in Phase 10. There is no conversation to resume: read
+`test-authoring-log.md` first, then the current state of the files (and, on a
+Phase 8 FAIL, `test-review-report.md`), then apply the new feedback and re-run
+Step 4.
 
 If `test-manifest.json` has a non-null `test_commit`, the tests were already
 committed — say so in your return, so the orchestrator amends that commit

@@ -84,17 +84,18 @@ orchestrator skill lives at `skills/implementation-workflow/`).
 | 5 | Library Investigation *(conditional)* | Agent: `library-researcher` | `library-usage-report.md` |
 | 6 | Implementation Planning | Skill: `implementation-planning` | `implementation-plan.md` + CI readiness finding, posted to the Task Issue (or a new standalone tracking Issue) |
 | 7 | Test Authoring | Agent: `test-writer` | automated tests, `docs/manual-tests/<slug>.md`, scaffolding, CI if absent, `test-manifest.json` |
-| 8 | Test Review Gate & Freeze | Orchestrator inline | human approves the specification → committed locally as one `test(...)` commit; that SHA is the freeze point |
-| 9 | Implementation | Agent: `implementer` | **uncommitted** source changes, `why-notes.md`, any ADR; **cannot modify tests of either kind** — escalates via `test-dispute.md`; runs no `git` |
-| 10 | Automated Review | Agent: `code-reviewer` | `review-report.md`; verifies the test freeze mechanically before anything else; loops back to Phase 9 on FAIL, up to 5 attempts |
-| 11 | Human Review Gate | Orchestrator inline | `approve` or `request-changes` via `AskUserQuestion`; any ADR is reviewed here too |
-| 12 | History Cleanup & Persistence | Agent: `persistence-engineer` | commits the working tree as `test` + implementation commits, finalises this run's draft ADRs, pushes (`--force-with-lease` only after a rewrite), opens/updates the PR, fills the Map Issue row's `PR` cell |
-| 13 | Map Issue Update | Orchestrator inline | `map-issue`: flips the row to `done`, closes the Task Issue. `standalone`: closes the tracking Issue Phase 6 created. Phases 9/10 flip the row to `blocked` instead on an unresolved halt (`map-issue` only) |
+| 8 | Automated Test Review | Agent: `test-reviewer` | `test-review-report.md`; checks coverage and assertion quality against the frozen-candidate specification before any human sees it; loops back to Phase 7 on FAIL, up to 5 attempts |
+| 9 | Test Review Gate & Freeze | Orchestrator inline | human approves the specification → committed locally as one `test(...)` commit; that SHA is the freeze point |
+| 10 | Implementation | Agent: `implementer` | **uncommitted** source changes, `why-notes.md`, any ADR; **cannot modify tests of either kind** — escalates via `test-dispute.md`; runs no `git` |
+| 11 | Automated Review | Agent: `code-reviewer` | `review-report.md`; verifies the test freeze mechanically before anything else; loops back to Phase 10 on FAIL, up to 5 attempts |
+| 12 | Human Review Gate | Orchestrator inline | `approve` or `request-changes` via `AskUserQuestion`; any ADR is reviewed here too |
+| 13 | History Cleanup & Persistence | Agent: `persistence-engineer` | commits the working tree as `test` + implementation commits, finalises this run's draft ADRs, pushes (`--force-with-lease` only after a rewrite), opens/updates the PR, fills the Map Issue row's `PR` cell |
+| 14 | Map Issue Update | Orchestrator inline | `map-issue`: flips the row to `done`, closes the Task Issue. `standalone`: closes the tracking Issue Phase 6 created. Phases 8/10/11 flip the row to `blocked` instead on an unresolved halt (`map-issue` only) |
 
 **Two invariants that shape most of the file contracts.** First, *the
-implementation is never committed before Phase 12* — the implementer runs no
+implementation is never committed before Phase 13* — the implementer runs no
 `git`, so review loops and send-backs happen against a working tree and there
-is no messy history to squash. The cost is that Phase 12 must build the series
+is no messy history to squash. The cost is that Phase 13 must build the series
 from `modified-files.json` and verify it against a `git write-tree` snapshot
 (not against `HEAD`, which doesn't contain the work), and must never
 `git reset --hard`. Second, *there is no agent conversation resume*: every
@@ -109,7 +110,7 @@ orchestrator resolves once at Step 0 and passes into every agent prompt:
 |-----|--------|
 | `vcs-minimalism.md` | what may land in VCS, the *why* routing, ADR rules and the two acceptance paths |
 | `git-workflow.md` | branching, commit shape, where the implementation gets committed, the soft-reset regroup, push policy |
-| `test-first.md` | the `test-writer`/`implementer` contract, the two kinds of test, how the freeze is verified |
+| `test-first.md` | the `test-writer`/`test-reviewer`/`implementer` contract, the two kinds of test, how the freeze is verified |
 | `map-issue.md` | the Task Graph table and its status vocabulary, which phase writes which cell, and the `gh issue edit --body-file -` whole-body-rewrite pattern |
 | `decision-precedent.md` | checking a decision against `docs/adr/index.md` before treating it as settled, and what to do when it conflicts with or contradicts an existing ADR |
 
@@ -118,13 +119,13 @@ whoever touches a GitHub Issue — the orchestrator, `requirement-understanding`
 `issue-refinement`, and `persistence-engineer`. `decision-precedent.md` is read
 by whichever agent/skill is about to accept a decision as settled or write an
 ADR of its own — `implementer` and `issue-refinement` — plus the orchestrator,
-which raises a conflict `implementer` can't resolve itself at Phase 11.
+which raises a conflict `implementer` can't resolve itself at Phase 12.
 
 See `plugins/implementation-workflow/skills/*/reference.md` and `agents/*.md`
 for per-criterion automated/manual routing, the scrutiny checklist, the
 review-loop cap, and the PR body contract.
 
-Standalone skill (outside the thirteen-phase pipeline): `onboarding`
+Standalone skill (outside the fourteen-phase pipeline): `onboarding`
 (`/implementation-workflow:onboarding`) — verifies `gh` CLI/GitHub-remote
 prerequisites, reports CI and `docs/adr/` readiness, and creates or updates the
 consuming project's `docs/tool.md`. Run once when adopting the plugin, or
@@ -248,7 +249,7 @@ against `implementation-workflow` — is in
   Lifecycle: written as `draft`, flipped to `accepted` when the change ships;
   once out of `draft`, `Decision` and `Context` are immutable and a change of
   mind means a new superseding ADR. **Two acceptance paths:** an ADR from
-  `implementer` (Phase 9) is flipped by `persistence-engineer` at Phase 12
+  `implementer` (Phase 10) is flipped by `persistence-engineer` at Phase 13
   after the review gate — and only ADRs from *this run*, never someone else's
   draft. An ADR from `issue-refinement` (Phase 2) is written `accepted`
   directly, because its doc PR *is* the change that ships the decision and has
@@ -273,7 +274,7 @@ against `implementation-workflow` — is in
   project's `README.md` links to. An automated test is an executable statement
   of behaviour; a manual test is a non-executable one, for behaviour a runner
   can't check. Both are *what*, not *how*, so both are committed; both are
-  frozen in the same `test(...)` commit at Phase 8; the implementer may edit
+  frozen in the same `test(...)` commit at Phase 9; the implementer may edit
   neither. The **record of one execution** is not committed — that's a run log
   and goes to the PR body and the Issue. There is therefore **always** a test
   commit, including for a task whose specification is entirely manual. All of

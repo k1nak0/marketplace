@@ -32,7 +32,7 @@ criterion and what makes it ambiguous; don't ask a generic "automated or
 manual?" about the whole task.
 
 Both kinds carry the same weight downstream: both are committed, both are
-frozen at the Phase 8 gate, and the implementer may edit neither. The manual
+frozen at the Phase 9 gate, and the implementer may edit neither. The manual
 ones land in `docs/manual-tests/<slug>.md`, which `README.md` links to — so
 write the reason each one isn't automated into the plan. It ends up in a
 document people read.
@@ -57,7 +57,7 @@ nobody asked for — this is a task-scoped side effect, and a large CI diff will
 dominate the review of the actual change.
 
 If the project deliberately has no CI (no remote, an internal-only repo), the
-user will say so at the Phase 8 gate. Record it as `CI: bootstrap` anyway and
+user will say so at the Phase 9 gate. Record it as `CI: bootstrap` anyway and
 let them decline — the plan's job is to make the absence visible.
 
 If the task has no automated test cases at all, record `CI: n/a — no automated
@@ -66,7 +66,7 @@ tests this task` rather than leaving the field blank.
 ## Writing the Test-Case Table
 
 The table is read twice: by `test-writer` to write the tests, and by the human
-at the Phase 8 gate to decide whether the specification is right. Write for
+at the Phase 9 gate to decide whether the specification is right. Write for
 the second reader. The same applies to the manual steps.
 
 | Test ID | Description | Input | Expected Output | Out-of-Scope? |
