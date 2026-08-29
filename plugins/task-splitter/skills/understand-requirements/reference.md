@@ -1,6 +1,9 @@
 # Requirements Interview — Full Question Bank
 
-Loaded on demand when SKILL.md's quick reference is insufficient.
+Loaded on demand when SKILL.md's quick reference is insufficient. The topic
+groups below are the **`design` mode** interview, conducted from scratch. For
+`split` mode, read the last section first — most of these questions are already
+answered.
 
 ---
 
@@ -75,3 +78,66 @@ When a user answer is ambiguous, use this structure:
   require any external library not already in the project?"
 - **Epic feels like it's really two epics** → Surface it as a question, don't
   decide unilaterally; a wrong split here cascades into `plan-tasks`.
+
+---
+
+## Split Mode — Reading Requirements Out of a Design Doc
+
+In `split` mode the epic's behaviour was settled in an earlier run, and
+`docs/design/<slug>.md` is the record of it. Your job shifts from eliciting
+requirements to **verifying that the design doc is a sufficient basis for a
+task breakdown**, and filling the few gaps it leaves.
+
+### What to read, in order
+
+1. `docs/design/<slug>.md` in full — `## Overview` fixes the scope,
+   `## Interfaces` and `## State Transitions` are what tasks get cut from,
+   `## Constraints` is what acceptance criteria have to respect.
+2. Its row in `docs/design/index.md` — the status tells you whether the doc is
+   `draft` or settled.
+3. `docs/prd.md` — for scope boundaries stated at the product level rather than
+   in the doc.
+4. `docs/adr/index.md` — an ADR touching this feature area is the *why* behind
+   something the design doc states as fact. Read any that look relevant; a task
+   that unknowingly contradicts an accepted decision is expensive to discover
+   later.
+
+### The four questions worth asking anyway
+
+Even a complete design doc rarely answers these, and `plan-tasks` needs all
+four:
+
+1. **Is the whole doc in scope for this run, or a part of it?** A design doc
+   can describe a feature that ships across several epics.
+2. **Is there adjacent in-flight work this must not collide with?** The doc
+   describes a system; it doesn't know what else is being built this week.
+3. **Is a new dependency expected?** Design docs deliberately name no library,
+   so this is invisible in the doc by construction.
+4. **What would you check by hand before believing the epic is done?** The
+   doc's constraints imply some of it, but manual verification steps are a
+   judgement the user holds.
+
+### When the doc isn't enough
+
+Three findings are worth stopping for rather than working around. Report each
+to the orchestrator rather than deciding alone:
+
+| Finding | Why it's not yours to fix |
+|---|---|
+| The design doc contradicts what the user now says | One of the two has to change, and changing a committed contract is a `design`-mode run |
+| The doc is silent on behaviour the tasks would have to implement | Inventing it here puts a decision into Task Issues that never reached the design doc |
+| The doc still says `**Status:** draft` | It may be mid-review; splitting it registers Issues against a contract still in motion |
+
+The third one is a warning, not a blocker — say it plainly and let the user
+decide. The first two usually mean the run belongs in `design` mode against the
+existing doc.
+
+### A gap the doc leaves may be an ADR, not a question
+
+If a gap turns out to be a genuine fork — the design doc is silent because
+nobody ever chose, and the choice has consequences beyond this epic — then
+answering it is *making* a decision at planning time, and
+[../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §3 applies. Say so
+when you report the gap: the orchestrator will need an ADR-only docs PR to get
+the answer into version control, and it can only do that if it knows a decision
+was made rather than a detail clarified.

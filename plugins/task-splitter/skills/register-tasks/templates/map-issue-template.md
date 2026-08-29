@@ -27,4 +27,17 @@ Status values: not-started / in-progress / blocked / done / dropped
 
 <!-- Free-form. Anything about the epic as a whole that doesn't belong in a
      row: a decision that reshaped the graph, a dependency on work outside
-     this epic. Per-task PR links go in the PR column, not here. -->
+     this epic. Per-task PR links go in the PR column, not here.
+
+     If splitting this epic produced an ADR of its own (task-splitter's split
+     mode, where there is no design-doc PR to carry it), link its PR here with
+     one line on what it decided. It does not go in the Design PR header —
+     that header means the design this epic depends on. -->
+
+<!-- Rationale for the split — why these seams, why this order — belongs in
+     this section. It is a snapshot of one planning session, not a standing
+     contract, which is why it lives on the Issue rather than in a committed
+     file. -->
+
+<!-- Split mode, unmerged design doc: say so here as well as in the header.
+     Anyone picking up a task needs to know the contract could still move. -->

@@ -14,6 +14,8 @@ into GitHub Issues.
 
 - For grain/dependency-graph rules, see [reference.md](reference.md)
 - For the output template, see [templates/task-breakdown-template.md](templates/task-breakdown-template.md)
+- For what belongs in an Issue versus a design doc versus an ADR, see
+  [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2
 
 ---
 
@@ -22,7 +24,21 @@ into GitHub Issues.
 ### Step 1 — Read Inputs
 
 Read `.claude/task-splitter/<task-id>/requirements-report.md` and the design
-doc written by `design-behavior`.
+doc it names. Its `Mode` header tells you where you are:
+
+- **`design`** — the design doc was written by `design-behavior` moments ago,
+  from the same requirements report. The two agree by construction.
+- **`split`** — the design doc predates this run and is the authority on
+  behaviour; the requirements report says which part of it is in scope now.
+  Read the doc in full rather than working from the report's summary of it, and
+  read any ADR in `docs/adr/index.md` that touches this feature area — a task
+  that contradicts an accepted decision is expensive to discover later.
+
+In `split` mode, if the design doc turns out not to cover behaviour a task
+would have to implement, **stop and report it** rather than inventing the
+behaviour in an acceptance criterion. A Task Issue is not a place to introduce
+behaviour the design doc never stated; the orchestrator decides whether that
+sends the run back to `design` mode.
 
 ### Step 2 — Decompose into Tasks
 
@@ -56,8 +72,29 @@ independent PRs and need to be re-split.
 Write to `.claude/task-splitter/<task-id>/task-breakdown-plan.md` using
 [templates/task-breakdown-template.md](templates/task-breakdown-template.md).
 
+### Step 5 — Flag Anything That Became a Decision
+
+Splitting is normally description, not decision: how you cut the graph is a
+snapshot of one planning session, `implementation-workflow` reshapes it freely,
+and it belongs in the Map Issue rather than an ADR.
+
+Occasionally it isn't. Reading a design doc closely enough to cut tasks from it
+surfaces forks the design phase left open — a contract two tasks would both
+have to write against, a compatibility boundary implied but never stated, a
+behaviour excluded in a way that will look like an oversight later. If you had
+to settle one of those to produce the breakdown, that is a **decision made at
+planning time**, and [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
+§3 routes it — most often to an ADR.
+
+Report it to the orchestrator explicitly, with the fork and the reasoning. Do
+not write the ADR yourself and do not bury the decision in an acceptance
+criterion: the orchestrator has to open a PR to get it into version control,
+and it can only do that if it knows the decision exists.
+
 ## Return Value
 
 Return the plan path, task count, and the topological order as a short list
 (e.g. "1 → 2 → 3, with 4 depending on both 2 and 3") — enough for the
-orchestrator to show the user before the confirm gate.
+orchestrator to show the user before the confirm gate. Include any decision
+flagged at Step 5, and any gap or contradiction found in the design doc at
+Step 1.
