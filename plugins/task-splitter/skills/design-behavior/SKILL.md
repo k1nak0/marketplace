@@ -12,12 +12,19 @@ doc that describes *what* the system does, observable from the outside — not
 across reimplementations and what `plan-tasks` and `implementation-workflow`
 both depend on being stable.
 
+This skill runs in the orchestrator's **`design` mode only**. In `split` mode
+the design doc already exists and is not this run's to rewrite.
+
 ## Quick Reference
 
 - For the behavior/implementation boundary and NG examples, see [reference.md](reference.md)
-- For what may be written to the repository at all — and why this doc has no
-  `## Implementation Notes` section — see
-  [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
+- For which artifact each piece of content belongs in — design doc, Issue, ADR,
+  or nowhere — and why this doc has no `## Implementation Notes` section, see
+  [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2
+- For when a design decision needs an ADR, see that document's §3 — and Step 5
+  below, which is the phase where this actually comes up
+- For the environment every file write here happens in, see
+  [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
 ---
 
@@ -82,7 +89,52 @@ other section for technical decisions, snags, or learnings — that content is
 that accumulates implementation detail stops being a stable contract, which is
 the one thing it exists to be.
 
-### Step 5 — Update the Index and PRD
+### Step 5 — Write an ADR for Each Decision the Doc States as a Fact
+
+**Do this pass every time. It is the step most often skipped, and skipping it
+is how a design doc ends up asserting things nobody can justify.**
+
+A design doc states outcomes: "a session expires after an hour of inactivity",
+"the import rejects the whole file on the first bad row". Written down, each
+reads as a fact about the system. But you just *chose* it, over alternatives
+that were live a minute ago, for reasons that are in your working context and
+nowhere else. The behaviour-only boundary that keeps this doc stable is exactly
+what strips the reasoning out of it — so the reasoning has to land somewhere,
+and [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §3 says where.
+
+Go back through the doc you just wrote, line by line, and for each statement
+ask: **was this contested?** If yes, apply the half-day test. If reversing it
+would cost a human half a day or more, write an ADR.
+
+You have no source comments and no multi-file commit to fall back on — this
+plugin writes documents, not code — so at planning time the routing collapses
+to "ADR, or the reasoning is lost". That asymmetry is why this phase should
+produce ADRs far more often than it has been. The §3 table lists the signals;
+the ones that come up here most are a public contract others will write
+against, a compatibility boundary, a data shape that outlives the epic, and a
+behaviour deliberately excluded in a way that will later look like an oversight.
+
+Write each as `docs/adr/NNNN-<kebab-slug>.md` with `**Status:** accepted` —
+not `draft`, because the Phase 4 PR *is* the change that ships the decision and
+has no later gate (vcs-minimalism §6) — and add its row to `docs/adr/index.md`.
+Number from the highest existing ADR + 1; create `docs/adr/` if it doesn't
+exist.
+
+Two rules that keep these honest:
+
+- **`## Alternatives Considered` is where the value is.** The alternative you
+  rejected, and the specific reason it lost, is the part nobody can reconstruct
+  from the design doc. An ADR without it is barely worth the file.
+- **Don't restate the design doc in the ADR.** The doc says what the system
+  does; the ADR says why it was decided to do that. If your `## Decision` reads
+  like a paragraph of the design doc, you've written the wrong document.
+
+If nothing in the doc was genuinely contested — a small epic extending an
+established pattern — write no ADR and say so in your return value. An empty
+pass that was actually performed is a fine outcome; one that was silently
+skipped is not.
+
+### Step 6 — Update the Index and PRD
 
 - Add a row to `docs/design/index.md` (title, status `draft`, one-line summary,
   link).
@@ -94,5 +146,8 @@ the one thing it exists to be.
 
 Return the design doc path and a one-sentence summary of what it covers —
 enough for `plan-tasks` to know where to read from and for the orchestrator to
-log progress. If you flagged a conflict, include that in the return so the
-orchestrator can surface it prominently.
+log progress. List every ADR you wrote (number, title, path), or state
+explicitly that Step 5 found nothing contested — the orchestrator shows any ADR
+to the user in full at the confirm gate and stages it in the Phase 4 commit, so
+an unreported one never ships. If you flagged a conflict, include that too, so
+the orchestrator can surface it prominently.

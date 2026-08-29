@@ -61,6 +61,44 @@ If a design doc's behaviour body turns out to be contradicted by what was
 built, that's escalated to a human — the doc and the implementation disagreeing
 is a real problem, not a documentation-maintenance chore.
 
+## Design Doc or ADR? — Worked Examples
+
+The behaviour/implementation boundary above says what may go in the design doc.
+This says what has to go *somewhere else* — specifically, into an ADR, because
+the design doc has no room for it and the reasoning is otherwise lost.
+
+**The split is what versus why.** The design doc records the behaviour the
+system has. The ADR records that this behaviour was chosen, over what, and on
+what grounds. Both are committed; they have different lifetimes, and that is
+the reason they are different files. A design doc is rewritten whenever the
+behaviour changes. An ADR is immutable once accepted, and a change of mind
+produces a new ADR that supersedes it — so folding the rationale into the
+design doc destroys it the first time the behaviour is revised.
+
+| The decision | Design doc says | ADR says | ADR needed? |
+|---|---|---|---|
+| Sessions expire after 1h of inactivity, not on a fixed 24h clock | "A session expires 1 hour after last activity" | Why sliding expiry beat a fixed TTL: the support burden of mid-shift logouts against the exposure window of a stolen token | **Yes** — a contract clients time their refresh against |
+| A bulk import rejects the whole file on the first bad row | "An import containing any invalid row is rejected in full; no rows are applied" | Why all-or-nothing beat partial application: partial imports left users unable to tell what landed, and the reconciliation cost exceeded the convenience | **Yes** — reversing it means reworking every caller's error handling |
+| The public API returns cursor pages, not offset pages | "List endpoints accept `cursor` and `limit` and return `next_cursor`" | Why cursors beat offsets here: result sets mutate under the reader, and offset paging silently skipped rows | **Yes** — a public contract others write against |
+| v1 of the API stays supported for two more releases | "v1 remains available through release N+2; v2 is the default from release N" | Why two releases and not one or five: the two largest integrators' upgrade cycles | **Yes** — a compatibility boundary |
+| Deliberately *not* supporting nested groups in v1 | "Groups do not contain other groups" | Why the exclusion is deliberate: the permission model has no answer for inherited membership, and shipping nesting without one was judged worse than not shipping it | **Yes** — otherwise it reads as an oversight and someone "fixes" it |
+| The error message wording on a validation failure | "Invalid input blocks submission with an inline error naming the field" | — | No — not contested, and reversible in minutes |
+| Which section of the design doc the constraint lands in | (wherever it fits) | — | No — that's editing, not deciding |
+| Cutting the epic into five tasks rather than three | (nothing — this isn't behaviour) | — | No — that's the Map Issue's rationale section |
+
+### The test, restated
+
+Read each statement in the doc you just wrote and ask two questions in order:
+
+1. **Was there a real alternative?** If the statement is the only sensible way
+   the system could behave, there was no decision — move on.
+2. **Would reversing it cost a human half a day or more?** Reversing a public
+   contract, a data shape, or a compatibility promise means finding and
+   changing every writer against it. Reversing a wording choice means an edit.
+
+Both yes → ADR. When you can't tell, write it: an unnecessary ADR costs one
+file, and a missing one costs the next person a week of archaeology.
+
 ## Conflict Detection
 
 Before writing, check:

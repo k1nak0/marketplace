@@ -16,6 +16,10 @@ action — this phase only runs after the orchestrator's confirm gate.
 - Map Issue body shape: [templates/map-issue-template.md](templates/map-issue-template.md)
 - Task Issue body shape: [templates/task-issue-template.md](templates/task-issue-template.md)
 - Step-by-step registration order: [reference.md](reference.md)
+- What belongs in an Issue rather than a committed file:
+  [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2
+- Why `gh` works here when most network access doesn't:
+  [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md) §3
 
 ---
 
@@ -59,9 +63,20 @@ Record each `{title, issue, depends_on}` in `issue-map.json` as it's created.
 Using [templates/map-issue-template.md](templates/map-issue-template.md) and
 the real issue numbers from `issue-map.json`, compose the full body and edit
 it in with `--body-file -` (see [reference.md](reference.md) for why not
-`--body`). Fill the `**Design PR:**` header from the `DESIGN_PR_URL` the
-orchestrator passed you, and leave every `PR` cell empty — those are
-`implementation-workflow`'s to fill:
+`--body`). Leave every `PR` cell empty — those are
+`implementation-workflow`'s to fill.
+
+Fill the `**Design PR:**` header from the `DESIGN_PR_URL` the orchestrator
+passed you. Its meaning is the same in both of the orchestrator's modes: **the
+PR that has to merge before the design this epic depends on is on the default
+branch.** In `design` mode that's the PR the run just opened; in `split` mode
+it's either a pre-existing open PR the orchestrator found, or
+`"none — docs already on the default branch"`.
+
+If the orchestrator also passed an **ADR PR URL** (`split` mode, where a
+decision made while splitting needed its own docs PR), put it in the `## Notes`
+section with one line on what it decided — not in the `Design PR` header, which
+means something else:
 ```bash
 gh issue edit <map-issue-number> --body-file - <<'ISSUE_BODY'
 <full body>

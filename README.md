@@ -20,14 +20,37 @@ change yourself, use `light-workflow`.
 
 ## task-splitter
 
-| Phase | Name | Mechanism | Output |
-|-------|------|-----------|--------|
-| 1 | Requirement Understanding | Skill: `understand-requirements` | `requirements-report.md` |
-| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md` (uncommitted) |
-| 3 | Task Planning | Skill: `plan-tasks` | `task-breakdown-plan.md` |
-| — | Confirm Gate | `AskUserQuestion` | go/no-go before anything external |
-| 4 | Design Doc PR | Orchestrator inline | branch `docs/<slug>`, one commit, PR opened |
-| 5 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues |
+Runs in one of two modes. It works out which by looking at `docs/design/` and
+asking you — or you can say `--mode design` / `--mode split` outright.
+
+| Phase | Name | Mechanism | `design` | `split` | Output |
+|-------|------|-----------|----------|---------|--------|
+| 1 | Requirement Understanding | Skill: `understand-requirements` | full interview | reduced | `requirements-report.md` |
+| 2 | Behavior Design | Skill: `design-behavior` | ✓ | — | `docs/design/<slug>.md` + any ADR (uncommitted) |
+| 3 | Task Planning | Skill: `plan-tasks` | ✓ | ✓ | `task-breakdown-plan.md` |
+| — | Confirm Gate | `AskUserQuestion` | ✓ | ✓ | go/no-go before anything external |
+| 4 | Docs PR | Orchestrator inline | `docs/<slug>` | ADR-only, if any | one commit, PR opened |
+| 5 | Task Registration | Skill: `register-tasks` | ✓ | ✓ | Map Issue + Task Issues |
+
+### What's distinctive
+
+- **`split` mode doesn't re-interview you.** If `docs/design/<slug>.md` already
+  describes the epic, Phase 1 reads out of the doc what the doc settles and
+  asks only the four or five things it can't answer — which part is in scope
+  now, adjacent work not to collide with, a new dependency, what you'd check by
+  hand.
+- **It never quietly rewrites a design doc it didn't write.** In `split` mode,
+  a doc that contradicts you or is silent on behaviour a task would need is
+  reported, not patched — and the run offers to switch to `design` mode against
+  that doc. Splitting a doc that's still open in a PR gets a warning and a
+  question first, then that PR's URL in the Map Issue header.
+- **ADRs are its main *why* channel, not an afterthought.** It writes documents
+  rather than code, so it has no source comments and no multi-file commit to
+  fall back on: at planning time the choice is an ADR or losing the reasoning.
+  Phase 2 makes a mandatory pass over the doc it just wrote asking which
+  statements were actually contested, and Phase 3 does the same for forks it
+  hits while cutting tasks. Task sizing and ordering deliberately stay out —
+  that's a snapshot of one planning session and lives in the Map Issue.
 
 ## implementation-workflow
 
@@ -127,13 +150,19 @@ and covered under Design Principles below.
 ### Splitting an epic into tasks
 
 ```
-/task-splitter:task-splitter
+/task-splitter:task-splitter <epic description> [--mode design|split]
 ```
 
-Walks through requirements → design → task breakdown → a confirmation
-question → a design-doc PR → Map Issue + Task Issue creation on GitHub. The
-design docs are committed and pushed by the plugin, on their own branch; the
-PR is opened for you and left for you to merge.
+With no design doc for the epic, it walks through requirements → design → task
+breakdown → a confirmation question → a design-doc PR → Map Issue + Task Issue
+creation on GitHub. The design docs are committed and pushed by the plugin, on
+their own branch; the PR is opened for you and left for you to merge.
+
+If `docs/design/` already covers the epic, it offers to skip straight to the
+split: a short scoping conversation, the breakdown, your confirmation, and the
+Issues. Nothing is written to `docs/design/` in that mode — the only thing that
+can reach a commit is an ADR, if splitting the doc turned up a decision the
+design phase left open, and that ships as its own small PR.
 
 ### Implementing a task
 

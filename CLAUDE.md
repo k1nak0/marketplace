@@ -6,28 +6,61 @@ This file provides AI agent context for the k1nak0/marketplace repository.
 
 ## task-splitter Plugin
 
-Interviews the user for requirements, writes a behavior-only design doc, splits
-an epic into PR-sized tasks, confirms the split with the user, ships the design
-docs as their own PR, and registers everything as a GitHub Map Issue plus
-per-task Issues. Entry point: `/task-splitter:task-splitter` (the orchestrator
-skill lives at `skills/task-splitter/`).
+Takes an epic to a GitHub Map Issue plus per-task Issues, writing the
+behavior-only design doc on the way when one doesn't exist yet. Entry point:
+`/task-splitter:task-splitter` (the orchestrator skill lives at
+`skills/task-splitter/`).
 
-| Phase | Name | Mechanism | Output |
-|-------|------|-----------|--------|
-| 1 | Requirement Understanding | Skill: `understand-requirements` | `requirements-report.md` |
-| 2 | Behavior Design | Skill: `design-behavior` | `docs/design/<slug>.md`, updated `docs/design/index.md` + `docs/prd.md` — left **uncommitted** |
-| 3 | Task Planning | Skill: `plan-tasks` | `task-breakdown-plan.md` (topological order, AC, verification method, implementation sketch) |
-| — | Confirm Gate | Orchestrator inline (`AskUserQuestion`) | go/no-go before anything external |
-| 4 | Design Doc PR | Orchestrator inline | branch `docs/<slug>`, one `docs(...)` commit, PR opened (not merged) |
-| 5 | Task Registration | Skill: `register-tasks` | Map Issue + Task Issues via `gh` CLI |
+**It runs in one of two modes**, chosen at Step 1 by an explicit `--mode`
+argument, or by looking at `docs/design/` and confirming with the user
+(detection never decides alone; when nothing covers the epic it says `design`
+in one line rather than spending a question):
+
+| Phase | Name | Mechanism | `design` | `split` | Output |
+|-------|------|-----------|----------|---------|--------|
+| 1 | Requirement Understanding | Skill: `understand-requirements` | full interview | reduced | `requirements-report.md` (same shape either way; `Mode` + `Design doc` headers) |
+| 2 | Behavior Design | Skill: `design-behavior` | ✓ | — | `docs/design/<slug>.md`, updated index + `docs/prd.md`, any ADR — left **uncommitted** |
+| 3 | Task Planning | Skill: `plan-tasks` | ✓ | ✓ | `task-breakdown-plan.md` (topological order, AC, verification method, implementation sketch) |
+| — | Confirm Gate | Orchestrator inline (`AskUserQuestion`) | ✓ | ✓ | go/no-go before anything external; any ADR shown in full |
+| 4 | Docs PR | Orchestrator inline | `docs/<slug>` | ADR-only, if any | one `docs(...)` commit, PR opened (not merged) |
+| 5 | Task Registration | Skill: `register-tasks` | ✓ | ✓ | Map Issue + Task Issues via `gh` CLI |
+
+Phase numbers are kept rather than renumbered per mode, so "Phase 3" means one
+thing everywhere — the cost is a table with holes in it. `split` reads a design
+doc that already exists and never rewrites it: if the doc is wrong or silent on
+behaviour a task would need, `understand-requirements` and `plan-tasks` both
+stop and report rather than inventing it into an acceptance criterion, and the
+orchestrator offers a `design`-mode rerun against that doc. Before splitting an
+unmerged design doc it warns and asks, then puts that PR's URL in the Map Issue
+header so whoever picks up a task can see the contract could still move.
 
 Phases 2 and 4 are split on purpose: the design doc has to exist before the
 breakdown can be derived from it, but nothing should reach git history before
 the confirm gate, since feedback there can send the run back to Phase 2.
 
+**Why a mode here when ADR-0001 rejected one for `light-workflow`:** those two
+paths differ in their *invariants*, so a flag would have had to be threaded
+through six agents. These two differ only in *which phases run* and share every
+artifact contract — the report shape, the breakdown template, the Issue
+templates, the Task Graph table `implementation-workflow` parses — so the
+branch is confined to the orchestrator plus one step each in
+`understand-requirements` and `plan-tasks`. That confinement is the property to
+re-check before anyone adds a third mode. ADR-0002 has the full argument; it
+narrows ADR-0001 rather than superseding it.
+
+**ADRs are `task-splitter`'s main *why* channel, not a rare one.** It writes
+documents, not code, so it has no source comments and no multi-file commit to
+fall back on — at planning time the routing collapses to "ADR, or the reasoning
+is lost". `design-behavior` Step 5 is a mandatory pass over the doc just
+written, asking of each statement whether it was contested; `plan-tasks` Step 5
+does the same for forks surfaced while cutting tasks. Task sizing and ordering
+stay out of ADRs deliberately — that's a snapshot of one planning session and
+belongs in the Map Issue's Notes.
+
 See `plugins/task-splitter/skills/*/reference.md` for the behavior/
-implementation boundary, task-grain heuristics, and the Map/Task Issue body
-formats.
+implementation boundary, the design-doc-versus-ADR worked examples, the
+`split`-mode design-doc reading pass, task-grain heuristics, and the Map/Task
+Issue body formats.
 
 ---
 
@@ -170,29 +203,31 @@ against `implementation-workflow` — is in
   human would need half a day or more to reverse). Each plugin carries its own
   copy of this policy at `plugins/<plugin>/docs/vcs-minimalism.md` because
   plugins install independently — there are now **three** copies, so
-  **change one, change all three.** The *why* routing (§2) and the ADR rules
-  (§3) are the same policy in all three and must stay that way; the one
-  sanctioned divergence is in `light-workflow`'s §1, where the verification
-  procedure goes to the PR body instead of `docs/manual-tests/`, and it is
-  marked as a divergence in the file itself.
+  **change one, change all three.** The *why* routing and the ADR rules are the
+  same policy in all three and must stay that way — they are §2 and §3 in
+  `implementation-workflow` and `light-workflow`, and §3 and §4 in
+  `task-splitter`, which carries an extra planning-time artifact-routing table
+  as its §2. The one sanctioned divergence is in `light-workflow`'s §1, where
+  the verification procedure goes to the PR body instead of
+  `docs/manual-tests/`, and it is marked as a divergence in the file itself.
+  Each copy may also *append* material specific to its own plugin — the
+  planning-time ADR signals in `task-splitter`'s §3, the two-mode ADR carrier
+  table in its §6 — as long as the shared text stays equivalent.
 - **Four cross-plugin duplications exist on purpose**, because a plugin has to
   work with the others absent and so cannot link into them: the three
   `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies
   (`light-workflow` deliberately has none), the Map Issue table contract
   (`task-splitter`'s `map-issue-template.md` ↔ `implementation-workflow`'s
-  `docs/map-issue.md`), and the two `docs/sandbox-environment.md` copies
-  (`light-workflow` ↔ `implementation-workflow`) documenting the sandboxed
-  environment every file-writing or network-calling agent/skill in either
-  plugin runs in — what's readable, what's writable, which hosts are
+  `docs/map-issue.md`), and the three `docs/sandbox-environment.md` copies
+  documenting the sandboxed environment every file-writing or network-calling
+  agent/skill runs in — what's readable, what's writable, which hosts are
   reachable directly vs. only through `WebFetch`/`WebSearch`, and why a push
-  must always name its branch explicitly instead of using `-u`. `task-splitter`
-  does not yet carry a copy, deliberately out of scope for the change that
-  introduced this pair; it touches the filesystem and `gh` under the same
-  constraints and would need one if it starts running under this sandbox too.
-  Keep the existing copies in sync by hand. Duplication *within* a plugin is
-  not in this category — extract it into that plugin's `docs/` and link to it.
-  If a fifth workflow ever needs a fifth policy copy, revisit the arrangement
-  instead (ADR-0001's last consequence).
+  must always name its branch explicitly instead of using `-u`. Only §6 ("Who
+  reads this") differs between those three, because each plugin has a different
+  set of readers. Keep the existing copies in sync by hand. Duplication
+  *within* a plugin is not in this category — extract it into that plugin's
+  `docs/` and link to it. If a fifth workflow ever needs a fifth policy copy,
+  revisit the arrangement instead (ADR-0001's last consequence).
 - **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
   Context / Decision / Consequences / Alternatives Considered) plus
   `docs/adr/index.md`, updated in the same commit as the ADR it describes.
@@ -203,7 +238,9 @@ against `implementation-workflow` — is in
   after the review gate — and only ADRs from *this run*, never someone else's
   draft. An ADR from `issue-refinement` (Phase 2) is written `accepted`
   directly, because its doc PR *is* the change that ships the decision and has
-  no later gate; the same holds for a `task-splitter` Phase 4 ADR. A
+  no later gate; the same holds for a `task-splitter` Phase 4 ADR, in either
+  mode — `design` ships it inside the design-doc PR, `split` opens an ADR-only
+  PR for it since no document changed and there is nothing else to ride on. A
   `light-workflow` ADR follows the first path in miniature: written `draft` in
   its Phase 2, flipped to `accepted` in its Phase 4 after the approval gate, by
   the orchestrator itself and only for ADRs that run wrote.

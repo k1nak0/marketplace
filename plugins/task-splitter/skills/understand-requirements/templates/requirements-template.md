@@ -3,6 +3,13 @@
 **Task ID:** <!-- filled by skill -->
 **Created:** <!-- filled by skill -->
 **Phase:** 1 — Requirement Understanding
+**Mode:** design | split
+**Design doc:** <!-- split mode: docs/design/<slug>.md. design mode: "none yet — written at Phase 2" -->
+
+<!-- In split mode, mark any section filled from the design doc rather than
+     from the user with "(from design doc)" after its heading. The design doc
+     is the authority on behaviour; this report is the authority on what is in
+     scope for this splitting run. -->
 
 ---
 
@@ -83,8 +90,11 @@
 - ...
 
 ### Documentation Expected
+<!-- design mode -->
 - [ ] `docs/design/<slug>.md` — behavior spec (written by design-behavior)
 - [ ] `docs/prd.md` — updated with a link to the design doc
+<!-- split mode: the design doc already exists; list only what this run adds -->
+- [ ] `docs/adr/NNNN-<slug>.md` — only if a decision here passes the half-day test
 
 ---
 

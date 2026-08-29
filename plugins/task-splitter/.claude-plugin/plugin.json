@@ -1,7 +1,7 @@
 {
   "name": "task-splitter",
-  "version": "3.0.0",
-  "description": "Interviews the user for requirements, writes a behavior-only design doc, splits the work into PR-sized tasks with dependencies, ships the design docs as their own PR, and registers the tasks as a GitHub Map Issue plus per-task Issues.",
+  "version": "3.1.0",
+  "description": "Splits an epic into PR-sized tasks and registers them as a GitHub Map Issue plus per-task Issues. In design mode it interviews the user, writes a behavior-only design doc with an ADR for each decision that doc states as a fact, and ships those docs as their own PR. In split mode it reads a design doc that already exists and goes straight to the breakdown.",
   "author": {
     "name": "dango"
   },
