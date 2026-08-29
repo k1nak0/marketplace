@@ -49,7 +49,7 @@ what the system does as observed from outside it. That is the same category as
 This holds whether or not the document happens to be executable. An automated
 test is an executable statement of behaviour; a manual test procedure is a
 non-executable statement of the same thing, for behaviour a runner cannot
-check. Both are committed, both are frozen at the Phase 8 gate, both live for
+check. Both are committed, both are frozen at the Phase 9 gate, both live for
 as long as the behaviour does. See `test-first.md`.
 
 What is *not* committed is the **record of one execution** — who ran the
@@ -193,7 +193,7 @@ ships that change. Two paths reach acceptance, and each has exactly one owner:
 
 | Written by | In which change | Who flips it to `accepted`, and when |
 |---|---|---|
-| `implementer` (Phase 9) | The implementation PR | `persistence-engineer`, in Phase 12, after the human review gate approves — as part of the regroup, before the push |
+| `implementer` (Phase 10) | The implementation PR | `persistence-engineer`, in Phase 13, after the human review gate approves — as part of the regroup, before the push |
 | `issue-refinement` (Phase 2) | The design-doc PR | `issue-refinement` itself, in the same PR, immediately before asking the user to merge it |
 
 The Phase 2 case flips early on purpose. That PR *is* the change that ships the

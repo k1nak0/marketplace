@@ -75,7 +75,7 @@ this list — see docs/vcs-minimalism.md.>
 ## Out-of-Scope
 
 Criteria deliberately not specified this task. Listed, not omitted — the human
-at the Phase 8 gate needs to see what is being left out on purpose.
+at the Phase 9 gate needs to see what is being left out on purpose.
 
 | ID | Not specified | Why |
 |----|---------------|-----|

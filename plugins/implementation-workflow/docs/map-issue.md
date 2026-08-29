@@ -54,10 +54,10 @@ cell on every other row — rather than dropping a URL into Notes.
 | Cell | Written by | When |
 |---|---|---|
 | `Status` → `in-progress` | `requirement-understanding` (Phase 1) | after the user approves the task's content at the scrutiny gate — not merely when it's selected |
-| `Status` → `blocked` | Orchestrator (Phase 9/10) | an unresolved halt: a blocked report, or the review-fix loop exceeding its cap |
-| `Status` → `done` | Orchestrator (Phase 13) | after the PR is open |
+| `Status` → `blocked` | Orchestrator (Phase 8/10/11) | an unresolved halt: a blocked report, or a review-fix loop (test or code) exceeding its cap |
+| `Status` → `done` | Orchestrator (Phase 14) | after the PR is open |
 | `Status` → `dropped` | `issue-refinement` (Phase 2) | the task became unnecessary |
-| `PR` | `persistence-engineer` (Phase 12) | as soon as the PR URL exists |
+| `PR` | `persistence-engineer` (Phase 13) | as soon as the PR URL exists |
 | rows, titles, dependencies | `issue-refinement` (Phase 2) | a refinement reshaped the graph |
 
 Claiming a row is best-effort, not a lock: two sessions reading the Map Issue

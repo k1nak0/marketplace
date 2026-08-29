@@ -68,7 +68,7 @@ overrides the old one.**
   as you would any other flagged-not-resolved item, but the draft ADR you
   write must record the conflict inline (a line under `Context`) so the
   reviewer isn't relying on your return value alone. The orchestrator raises
-  it explicitly at Phase 11, separately from the general approve/
+  it explicitly at Phase 12, separately from the general approve/
   request-changes question.
 
 Once the user agrees, the new decision is written up as a supersession, per
@@ -85,4 +85,4 @@ already accepted instead.
 - **`issue-refinement`**, before writing an ADR of its own (Step 3).
 - **The orchestrator**, which resolves this doc's path alongside the other
   four at Step 0, and which raises any conflict `implementer` flagged at
-  Phase 11's human review gate.
+  Phase 12's human review gate.

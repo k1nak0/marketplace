@@ -1,6 +1,6 @@
 {
   "name": "implementation-workflow",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, a human-approved test-first specification (automated tests plus committed manual test procedures), implementation against frozen tests, automated and human review, history cleanup, and PR.",
   "author": {
     "name": "dango"
@@ -27,6 +27,7 @@
     "./agents/repository-explorer.md",
     "./agents/library-researcher.md",
     "./agents/test-writer.md",
+    "./agents/test-reviewer.md",
     "./agents/implementer.md",
     "./agents/code-reviewer.md",
     "./agents/persistence-engineer.md"

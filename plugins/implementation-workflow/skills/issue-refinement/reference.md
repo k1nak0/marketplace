@@ -73,7 +73,7 @@ only one that reshapes the graph itself, so three rules are specific to it:
   obsoleted it, and set its status cell to `dropped` rather than deleting the
   row.
 
-Leave the `PR` column alone — it belongs to Phase 12 — and give a new row an
+Leave the `PR` column alone — it belongs to Phase 13 — and give a new row an
 empty cell. Your accompanying comment should name this phase as the cause:
 
 ```bash

@@ -118,7 +118,7 @@ file its `**Status:**` line, per `vcs-minimalism.md`'s ADR section.
 **Write it as `**Status:** accepted`, not `draft`,** with today's `**Date:**`.
 This is the one place in the plugin where an ADR skips the draft stage, and the
 reason is that there is no later gate for it: this PR *is* the change that
-ships the decision, the user approved it in the Step 1 discussion, and Phase 12
+ships the decision, the user approved it in the Step 1 discussion, and Phase 13
 deliberately only flips drafts the *implementer* wrote. An ADR left as `draft`
 here would reach the default branch and stay `draft` forever.
 

@@ -101,10 +101,10 @@ Staging is always explicit — `git add -- <paths>`, never `git add -A` or
 
 ## 4. Where the implementation gets committed
 
-**Only one commit exists before Phase 12: the test commit.** The implementer
+**Only one commit exists before Phase 13: the test commit.** The implementer
 does not run `git` at all — its work sits in the working tree as uncommitted
-changes and new files, through Phase 9, through every Phase 10 fix round, and
-through every Phase 11 send-back. Phase 12 is where the implementation becomes
+changes and new files, through Phase 10, through every Phase 11 fix round, and
+through every Phase 12 send-back. Phase 13 is where the implementation becomes
 commits for the first time.
 
 That is deliberate: nothing has to be squashed, reworded, or rebased away,
@@ -113,7 +113,7 @@ costs one thing — an interrupted session loses uncommitted work — and the
 freeze point is unaffected, because the tests *are* committed.
 
 The test commit itself is created the moment the human approves the tests at
-Phase 8, and it is **local only** — nothing is pushed until the change has
+Phase 9, and it is **local only** — nothing is pushed until the change has
 cleared the human review gate and the history has been regrouped. The approved
 tests are safe from a later rewrite either way: they are in a commit, in the
 reflog, and in the recorded recovery SHA.
@@ -188,7 +188,7 @@ git restore --staged .                            # working tree untouched throu
 ```
 
 Then report the discrepancy, pointing at `regroup-discrepancy.diff`. The
-orchestrator routes it back to Phase 9 — usually the cause is a file the
+orchestrator routes it back to Phase 10 — usually the cause is a file the
 implementer created but left out of `modified-files.json`, which the
 implementer is the one who can answer for.
 
