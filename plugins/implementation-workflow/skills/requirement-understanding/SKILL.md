@@ -115,16 +115,19 @@ Issue from `not-started` to `in-progress` ([reference.md](reference.md) has
 the exact edit). Best-effort, not a lock — it closes the common case of a
 re-invoked session picking up a task someone is already deep into.
 
-## Step 4 — Check for `docs/tool.md`
+## Step 4 — Check for `docs/tools/`
 
 ```bash
-test -f docs/tool.md && echo present || echo missing
+test -d docs/tools && echo present || echo missing
+test -f docs/tool.md && echo "old-format-present" || true
 ```
 
-If missing, print
-[../implementation-workflow/templates/tool-template.md](../implementation-workflow/templates/tool-template.md)
+If `docs/tools/` is missing, print
+[../implementation-workflow/templates/agent-tool-template.md](../implementation-workflow/templates/agent-tool-template.md)
 and tell the user it's optional but helps later phases pick the right test and
-verification commands. Continue regardless — this never blocks.
+verification commands per agent. If `docs/tool.md` (the old single-file
+format) exists instead, point at `/implementation-workflow:onboarding` to
+migrate it. Continue regardless — this never blocks.
 
 ## Step 5 — Write the Requirements Report
 

@@ -32,6 +32,11 @@ docs. Read all three — you are the first enforcement point for one of them:
 - `sandbox-environment.md` — your own output (`test-review-report.md`) is
   subject to the same write constraints as everything else in this plugin.
 
+Also check for `docs/tools/test-reviewer.md` before Step 3 — if it exists, it
+names any Verification Tool a manual-test step might rely on, and links to
+that tool's own `docs/tools/<tool>.md` for how to reach it. Its absence just
+means this project hasn't documented one; Step 3's checks still apply.
+
 ## Input
 
 1. `.claude/implementation-workflow/<task-id>/test-manifest.json`
@@ -94,6 +99,11 @@ For every manual-test step:
 - **Has an honest reason it isn't automated** — a rendered surface or a live
   external system, stated in the document's header. "Awkward to automate" or
   no reason at all is **Major**.
+- **If the step names a Verification Tool, that tool is actually reachable.**
+  `ToolSearch` for it per `docs/tools/test-reviewer.md`. Nothing is built yet
+  at this phase, so you can't run the step for real — but a tool that isn't
+  documented there, or doesn't respond to `ToolSearch`, means `implementer`
+  and `code-reviewer` will hit the same wall later. **Major**.
 
 ### Step 4 — Scaffolding and Production Code
 
@@ -129,7 +139,7 @@ automated tests exist.
 | Severity | Definition | Blocks PASS? |
 |---|---|---|
 | **Critical** | A test that doesn't fail correctly, a tautological/non-discriminating assertion, production code beyond the scaffolding ceiling, both `test_files` and `manual_test_files` empty | Yes |
-| **Major** | Uncovered acceptance criterion, a criterion wrongly routed to manual, an internals-coupled or live-I/O assertion, a vague manual pass criterion, missing CI wiring, a manifest path that doesn't exist | Yes |
+| **Major** | Uncovered acceptance criterion, a criterion wrongly routed to manual, an internals-coupled or live-I/O assertion, a vague manual pass criterion, an unreachable Verification Tool, missing CI wiring, a manifest path that doesn't exist | Yes |
 | **Minor** | Naming, readability, an assertion that could be sharper but is discriminating | No |
 
 ### Step 8 — Write the Report
@@ -148,6 +158,7 @@ automated tests exist.
 | Every AC covered, correctly bucketed | PASS / **FAIL** |
 | No tautological or internals-coupled assertions | PASS / **FAIL** / n/a |
 | Manual steps have concrete pass criteria and an honest reason | PASS / **FAIL** / n/a |
+| Named Verification Tools are reachable | PASS / **FAIL** / n/a |
 | Scaffolding stays within the signature-only ceiling | PASS / **FAIL** / n/a |
 | CI runs the suite | PASS / **FAIL** / n/a |
 | Manifest complete and consistent | PASS / **FAIL** |

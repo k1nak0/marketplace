@@ -127,11 +127,11 @@ review-loop cap, and the PR body contract.
 
 Standalone skill (outside the fourteen-phase pipeline): `onboarding`
 (`/implementation-workflow:onboarding`) — verifies `gh` CLI/GitHub-remote
-prerequisites, reports CI and `docs/adr/` readiness, and creates or updates the
-consuming project's `docs/tool.md`. Run once when adopting the plugin, or
-whenever project tooling changes. See
+prerequisites, reports CI and `docs/adr/` readiness, and creates, updates, or
+migrates the consuming project's `docs/tools/` directory (see ADR-0003). Run
+once when adopting the plugin, or whenever project tooling changes. See
 `plugins/implementation-workflow/skills/onboarding/reference.md` for the
-manifest-file auto-detection heuristics.
+manifest-file auto-detection heuristics and the fixed agent↔tool mapping.
 
 ---
 
@@ -179,16 +179,23 @@ against `implementation-workflow` — is in
   default to built-in tools (`Grep`/`Glob`/`Read`, `WebSearch`/`WebFetch`).
   Project-specific MCP tools (a code-search server, a docs server, a
   Playwright/Godot MCP for verification, etc.) are declared by the
-  *consuming* project in its own `docs/tool.md`; skills/agents `ToolSearch`
-  for them by name when `docs/tool.md` mentions one. The `task-splitter` and
-  `implementation-workflow` orchestrators check for `docs/tool.md` at startup
-  and print a starter template if it's missing — this is a nudge, not a
-  requirement. `light-workflow` makes the same check but only mentions the file
-  in one line, deliberately: printing the template would mean a third copy of
-  `tool-template.md` to keep in sync, for a plugin whose whole premise is less
-  ceremony. `implementation-workflow`'s `onboarding` skill is where a user
-  actually resolves that nudge instead of dismissing it, whichever plugin
-  raised it.
+  *consuming* project, but the two plugins that read them no longer agree on
+  the file shape (ADR-0003): `task-splitter` and `light-workflow` still use a
+  single `docs/tool.md`, checked for and nudged the same way as before.
+  `implementation-workflow` instead reads a `docs/tools/` directory — one
+  file per tool, and one per agent/skill naming which tool(s) *it* should
+  consider — and its skills/agents `ToolSearch` for a tool by name when their
+  own `docs/tools/<agent-name>.md` mentions one. `task-splitter`'s
+  orchestrator checks for `docs/tool.md` at startup and prints a starter
+  template if it's missing — a nudge, not a requirement.
+  `implementation-workflow`'s orchestrator and `requirement-understanding`
+  do the equivalent check against `docs/tools/`. `light-workflow` makes the
+  `docs/tool.md` check but only mentions the file in one line, deliberately:
+  printing the template would mean a plugin whose whole premise is less
+  ceremony taking on template upkeep for a plugin whose contract it doesn't
+  even share. `implementation-workflow`'s `onboarding` skill is where a user
+  actually resolves its nudge — including migrating an existing `docs/tool.md`
+  onto the new layout — instead of dismissing it.
 - **No custom session-management infrastructure.** No SessionStart hooks, no
   `status.json` state machine. Cross-phase handoff is plain markdown files
   under `.claude/task-splitter/<task-id>/` or
@@ -221,10 +228,9 @@ against `implementation-workflow` — is in
   Each copy may also *append* material specific to its own plugin — the
   planning-time ADR signals in `task-splitter`'s §3, the two-mode ADR carrier
   table in its §6 — as long as the shared text stays equivalent.
-- **Five cross-plugin duplications exist on purpose**, because a plugin has to
+- **Four cross-plugin duplications exist on purpose**, because a plugin has to
   work with the others absent and so cannot link into them: the three
-  `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies
-  (`light-workflow` deliberately has none), the Map Issue table contract
+  `docs/vcs-minimalism.md` copies, the Map Issue table contract
   (`task-splitter`'s `map-issue-template.md` ↔ `implementation-workflow`'s
   `docs/map-issue.md`), the three `docs/sandbox-environment.md` copies
   documenting the sandboxed environment every file-writing or network-calling
@@ -242,7 +248,13 @@ against `implementation-workflow` — is in
   an Agent that doesn't. Keep the existing copies in sync by hand. Duplication
   *within* a plugin is not in this category — extract it into that plugin's
   `docs/` and link to it. If a fifth workflow ever needs a fifth policy copy,
-  revisit the arrangement instead (ADR-0001's last consequence).
+  revisit the arrangement instead (ADR-0001's last consequence). The
+  tool-documentation mechanism (`docs/tool.md` / `templates/tool-template.md`)
+  used to be a fifth item on this list; it no longer is. ADR-0003 deliberately
+  diverged `implementation-workflow`'s copy into a `docs/tools/` directory
+  while `task-splitter` kept the original single-file shape, so the two are
+  **not** required to stay in sync any more — see the "No bundled MCP
+  servers" bullet above for what each plugin does instead.
 - **`docs/adr/`** holds numbered ADRs (`NNNN-<slug>.md`, sections Status /
   Context / Decision / Consequences / Alternatives Considered) plus
   `docs/adr/index.md`, updated in the same commit as the ADR it describes.

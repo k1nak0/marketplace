@@ -31,11 +31,12 @@ own documentation site, and they're the only path you have to it. Do not fall
 back to a raw fetch or a package manager's own network call if `WebFetch`
 comes back empty — it will fail, not degrade.
 
-- If `docs/tool.md` documents a project-specific docs/MCP server (e.g. a
-  Context7-style docs server), `ToolSearch` for it and prefer it —
-  it's usually faster and more precise than web search. Otherwise,
-  `WebSearch`/`WebFetch` against the library's official docs are the default
-  and are sufficient.
+- If `docs/tools/library-researcher.md` exists, read it first — it names any
+  project-specific docs/MCP server (e.g. a Context7-style docs server) and
+  links to that tool's own `docs/tools/<tool>.md` for how to reach it.
+  `ToolSearch` for a tool it names and prefer it — it's usually faster and
+  more precise than web search. Otherwise, `WebSearch`/`WebFetch` against the
+  library's official docs are the default and are sufficient.
 
 ## Investigation Workflow
 

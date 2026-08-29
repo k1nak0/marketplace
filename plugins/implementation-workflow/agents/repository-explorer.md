@@ -24,11 +24,12 @@ write (the report below) lands inside the project working tree, so it's
 unaffected, but read it before assuming any other location is available to
 you.
 
-If `docs/tool.md` documents a project-specific code-search MCP tool (a symbol
-index, an LSP-backed search, etc.), `ToolSearch` for it and prefer it over raw
-`Grep`/`Glob` — it'll usually be more precise. If `docs/tool.md` doesn't exist
-or doesn't mention one, `Grep`/`Glob`/`Read` are the default and are
-sufficient.
+If `docs/tools/repository-explorer.md` exists, read it first — it names any
+project-specific code-search MCP tool (a symbol index, an LSP-backed search,
+etc.) and links to that tool's own `docs/tools/<tool>.md` for how to reach it.
+`ToolSearch` for a tool it names and prefer it over raw `Grep`/`Glob` — it'll
+usually be more precise. If the file doesn't exist or names nothing,
+`Grep`/`Glob`/`Read` are the default and are sufficient.
 
 ## Input
 

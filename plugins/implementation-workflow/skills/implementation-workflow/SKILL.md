@@ -121,17 +121,21 @@ a sandboxed environment, and this doc is not optional background for you
 either: it's why `persistence-engineer` (Phase 13) and `issue-refinement`
 (Phase 2) push naming the branch explicitly instead of using `-u`.
 
-## Step 0b — Check for `docs/tool.md`
+## Step 0b — Check for `docs/tools/`
 
 Phase 1 runs this same check; if for any reason it hasn't:
 
 ```bash
-test -f docs/tool.md && echo present || echo missing
+test -d docs/tools && echo present || echo missing
+test -f docs/tool.md && echo "old-format-present" || true
 ```
 
-If missing, print [templates/tool-template.md](templates/tool-template.md) and
-continue regardless — non-blocking. Point the user at
-`/implementation-workflow:onboarding` if they want to resolve it properly.
+If `docs/tools/` is missing, print
+[templates/agent-tool-template.md](templates/agent-tool-template.md) and
+continue regardless — non-blocking. If `docs/tool.md` (the old single-file
+format) exists instead, mention that it's superseded. Point the user at
+`/implementation-workflow:onboarding` if they want to resolve either
+properly.
 
 ## Step 1 — Create the Todo List
 
