@@ -10,14 +10,14 @@ the surface — that's the normal shape, not a compromise.
 
 - It can be stated as an input and an expected result.
 - It's logic with no unavoidable I/O, UI, or live external system.
-- `docs/tool.md`'s "Test Command" is filled in and the change sits inside what
-  that command exercises.
+- `docs/tools/implementation-planning.md` names a Test Command and the change
+  sits inside what that command exercises.
 
 **Manual** only when an automated test genuinely cannot express the behaviour:
 
 - The behaviour is visual, or is a property of a rendered surface.
 - Verifying it requires a live external system that can't be stood in for.
-- `docs/tool.md`'s "Verification Tools (MCP)" names something clearly
+- `docs/tools/implementation-planning.md` names a Verification Tool clearly
   applicable (a Playwright MCP for a UI change, a Godot MCP for a scene) — a
   strong signal that a manual step with that tool is the intended route.
 
@@ -25,11 +25,11 @@ the surface — that's the normal shape, not a compromise.
 precedent for this" are **not** reasons for manual. They're reasons to write
 the fixture.
 
-**Ask the user** when neither `docs/tool.md` nor the requirements report gives
-any signal for a criterion, or when you can see an automated route but suspect
-it would test a proxy for the behaviour rather than the behaviour. Name the
-criterion and what makes it ambiguous; don't ask a generic "automated or
-manual?" about the whole task.
+**Ask the user** when neither `docs/tools/implementation-planning.md` nor the
+requirements report gives any signal for a criterion, or when you can see an
+automated route but suspect it would test a proxy for the behaviour rather
+than the behaviour. Name the criterion and what makes it ambiguous; don't ask
+a generic "automated or manual?" about the whole task.
 
 Both kinds carry the same weight downstream: both are committed, both are
 frozen at the Phase 9 gate, and the implementer may edit neither. The manual

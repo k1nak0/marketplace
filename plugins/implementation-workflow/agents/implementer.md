@@ -40,6 +40,12 @@ docs. Read all five before you start:
   before you treat a decision as settled or write an ADR of your own, so you
   don't silently repeat or contradict one already on the books.
 
+Also check for `docs/tools/implementer.md` — if it exists, it names this
+project's Lint/Build Commands (Step 2) and any Verification Tool for the
+manual tests (Step 6), and links to each tool's own `docs/tools/<tool>.md`
+for how to reach it. Its absence just means this project hasn't documented
+one; proceed with the defaults those steps already describe.
+
 ## Input
 
 - `.claude/implementation-workflow/<task-id>/implementation-plan.md`
@@ -73,6 +79,10 @@ the patterns `impact-analysis-report.md` identified — code that reads like the
 code around it. Touch only files the plan lists, plus the scaffolding.
 
 Run the test command after each meaningful change, not only at the end.
+Before moving on, also run this project's lint and build commands if
+`docs/tools/implementer.md` names them, and fix anything they flag — a clean
+tree passes those too, not only the tests. If the file doesn't exist or names
+neither, skip this without asking.
 
 **Do not write to make the test pass in a way that doesn't make the behaviour
 true.** Special-casing the exact input a test uses, hard-coding an expected
@@ -169,8 +179,9 @@ Put the step-by-step observed results in `why-notes.md` under
 file is the procedure, valid for every future change; your observations are the
 record of this one run and belong to the PR (`vcs-minimalism.md`).
 
-If a step needs a `docs/tool.md` tool you can't reach, say so in your return
-rather than marking the step passed on inspection.
+If a step needs a Verification Tool named in `docs/tools/implementer.md` and
+you can't reach it, say so in your return rather than marking the step passed
+on inspection.
 
 ### Step 7 — Update Documentation
 

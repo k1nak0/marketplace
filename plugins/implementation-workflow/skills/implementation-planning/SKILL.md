@@ -21,6 +21,9 @@ functions to cover.
 
 - Plan template: [templates/implementation-plan-template.md](templates/implementation-plan-template.md)
 - Criterion routing and CI rules: [reference.md](reference.md)
+- This project's Test Command and any Verification Tool, if documented:
+  `docs/tools/implementation-planning.md` (absent is fine — fall back to the
+  defaults `reference.md` describes)
 - Where the plan itself is allowed to live: [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 - The test-first contract the plan feeds: [../../docs/test-first.md](../../docs/test-first.md)
 - The filesystem/network constraints this run operates under (you write the
@@ -54,8 +57,8 @@ executable and the other isn't (`../../docs/test-first.md`).
 
 `automated` is the default and the strong preference — an executable document
 can't silently rot. [reference.md](reference.md) has the full routing rules
-(the Definition of Done first, then `docs/tool.md`), including what does *not*
-count as a reason to send a criterion to manual.
+(the Definition of Done first, then `docs/tools/implementation-planning.md`),
+including what does *not* count as a reason to send a criterion to manual.
 
 **If a criterion is genuinely ambiguous, ask
 the user** — `AskUserQuestion`, naming the criterion and what makes it
@@ -64,8 +67,9 @@ the reason this phase runs inline rather than as an isolated agent; use it.
 
 ### 3. Check CI Readiness (whenever there are automated test cases)
 
-Look for CI that will actually run this suite: `.github/workflows/*.yml` and `*.yaml`, plus
-whatever `docs/tool.md` documents. Record in the plan which of these holds:
+Look for CI that will actually run this suite: `.github/workflows/*.yml` and
+`*.yaml`, plus the Test Command in `docs/tools/implementation-planning.md`, if
+that file exists. Record in the plan which of these holds:
 
 - CI exists and runs this suite — nothing to do.
 - CI exists but doesn't cover it — `test-writer` extends it.
@@ -83,7 +87,8 @@ implies: empty input, the limit and limit ± 1, the specified error cases.
 
 **Manual test steps** — one numbered step per behaviour, each with its action
 and the exact observation that constitutes a pass, plus a one-line reason it
-isn't automated. Name any `docs/tool.md` verification tool a step needs.
+isn't automated. Name any Verification Tool from
+`docs/tools/implementation-planning.md` a step needs.
 
 Either table may be empty; say "none" explicitly rather than omitting the
 section. **Both empty is not a valid plan** — that task has no specification to

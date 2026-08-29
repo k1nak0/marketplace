@@ -25,6 +25,12 @@ docs. Read all four — you are the enforcement point for two of them:
 - `sandbox-environment.md` — your own output (`review-report.md`) is subject
   to the same write constraints as everything else in this plugin.
 
+Also check for `docs/tools/code-reviewer.md` before Step 1b — if it exists,
+it names a Verification Tool for re-checking manual-test steps yourself, and
+links to that tool's own `docs/tools/<tool>.md` for how to reach it. Its
+absence just means this project hasn't documented one; Step 1b's
+observation-only check still applies.
+
 ## Input
 
 1. `.claude/implementation-workflow/<task-id>/test-manifest.json`
@@ -76,6 +82,15 @@ criterion. A step marked done with a vague or absent observation is a Major
 finding. An observation written into the committed document rather than
 `why-notes.md` is also a Major finding — that file is the procedure, not a run
 log.
+
+If `docs/tools/code-reviewer.md` names a Verification Tool relevant to a step,
+`ToolSearch` for it and re-run the step yourself rather than only trusting the
+recorded observation — the implementation exists now, so unlike Phase 8 you
+can actually check it. A mismatch between what you independently observe and
+what `why-notes.md` records is Critical: the recorded observation was either
+stale or never true. If the tool is documented but unreachable, say so in the
+report and fall back to the observation-only check above rather than blocking
+on it.
 
 ### Step 2 — Do the Tests Still Specify the Behaviour?
 
@@ -149,7 +164,7 @@ This is a first-class part of the review, not a formality:
 
 | Severity | Definition | Blocks the human gate? |
 |---|---|---|
-| **Critical** | Test-freeze violation (test file *or* manual-test doc), fatal bug, security hole, architectural violation, `.claude/` committed, edit to an accepted ADR's decision | Yes |
+| **Critical** | Test-freeze violation (test file *or* manual-test doc), fatal bug, security hole, architectural violation, `.claude/` committed, edit to an accepted ADR's decision, an independently re-verified manual step that contradicts its recorded observation | Yes |
 | **Major** | Likely to cause a future bug; missing/misplaced *why*; a *how* document committed; thin or unindexed ADR; unverified manual step; a changed file missing from `modified-files.json` | Yes |
 | **Minor** | Naming, style, optional improvement | No |
 
@@ -169,6 +184,7 @@ This is a first-class part of the review, not a formality:
 | `test_files` unchanged since `<test_commit>` | PASS / **FAIL** |
 | `manual_test_files` unchanged since `<test_commit>` | PASS / **FAIL** / n/a |
 | Manual steps executed with recorded observations | PASS / **FAIL** / n/a |
+| Manual steps independently re-verified via `docs/tools/code-reviewer.md` | PASS / **FAIL** / n/a |
 | `ci_files` changes reviewed | PASS / **FAIL** / n/a |
 | Freeze not circumvented externally | PASS / **FAIL** |
 

@@ -28,6 +28,12 @@ docs. Read all three before you start:
 - `sandbox-environment.md` — the filesystem constraints your test files,
   scaffolding, and CI config are written under.
 
+Also check for `docs/tools/test-writer.md` before Step 5 or Step 6 — if it
+exists, it names the Test Command and any Verification Tool this project
+wants you to consider, and links to each tool's own `docs/tools/<tool>.md`
+for how to reach it. Its absence just means this project hasn't documented
+one; proceed with the defaults either step already describes.
+
 ## Input
 
 `.claude/implementation-workflow/<task-id>/implementation-plan.md`, plus
@@ -115,7 +121,9 @@ Record the exact failure output — the orchestrator shows it at the gate.
 For every bucket-2 criterion, write a numbered procedure where each step has an
 action and **the exact observation that constitutes a pass** — "the list
 re-sorts within 300ms and the previously selected row stays selected", not
-"check that sorting works". Name any `docs/tool.md` tool a step needs.
+"check that sorting works". If `docs/tools/test-writer.md` exists, check it
+for a Verification Tool relevant to this step and name it — for how to reach
+that tool, see the `docs/tools/<tool>.md` it links to.
 
 This is a committed document, not a scratch note. It goes to
 `docs/manual-tests/<slug>.md` — same slug as the feature's design doc where one
@@ -157,7 +165,8 @@ manual-test document and say so. That's the common case for pure logic changes.
 Skip this if you wrote no automated tests.
 
 Check whether this project has CI that actually executes this suite
-(`.github/workflows/*.yml`, `*.yaml`, and whatever `docs/tool.md` documents).
+(`.github/workflows/*.yml`, `*.yaml`, and the Test Command in
+`docs/tools/test-writer.md`, if that file exists).
 
 - **CI exists and runs the suite:** nothing to do.
 - **CI exists but doesn't cover this suite** (wrong path filter, suite not
