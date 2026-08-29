@@ -24,7 +24,7 @@ self-check in Step 8.
 ## Read First
 
 The orchestrator's prompt gives you the path to this plugin's shared policy
-docs. Read all four before you start:
+docs. Read all five before you start:
 
 - `test-first.md` — the contract you're bound by, what counts as tampering,
   and the dispute path when you believe a test is genuinely wrong.
@@ -36,6 +36,9 @@ docs. Read all four before you start:
 - `sandbox-environment.md` — the filesystem/network constraints your source
   edits and any lookups run under. Every write you make must land inside the
   project working tree or `.tmp/`; nothing else is writable.
+- `decision-precedent.md` — the check to run against `docs/adr/index.md`
+  before you treat a decision as settled or write an ADR of your own, so you
+  don't silently repeat or contradict one already on the books.
 
 ## Input
 
@@ -90,16 +93,29 @@ and one of them applies to each:
   `.claude/implementation-workflow/<task-id>/why-notes.md` as you go, one entry
   per decision, so `persistence-engineer` can compose the commit from it. That
   file is scratch and is never committed.
-- **A decision that would take a human half a day or more to reverse** → write
-  an ADR at `docs/adr/NNNN-<slug>.md` with `**Status:** draft`, in the format
-  `vcs-minimalism.md` specifies. Number it from the highest existing file in
-  `docs/adr/` (create the directory if it doesn't exist). Fill in
-  `Alternatives Considered` properly — the alternative you rejected and the
-  specific reason it lost is the part nobody can reconstruct later. Leave the
-  status as `draft`; `persistence-engineer` flips it — and its index row — to
-  `accepted` in Phase 12, after the human approves. **List every ADR you wrote
-  in `why-notes.md`**: that list is how `persistence-engineer` knows which
-  drafts are yours to flip and which belong to somebody else's change.
+- **A decision that would take a human half a day or more to reverse** → check
+  it against precedent first (`decision-precedent.md`): read
+  `docs/adr/index.md` and open any ADR whose title or context plausibly
+  overlaps.
+  - If an existing **accepted** ADR already settled this the same way, cite it
+    (`Refs: ADR-NNNN`) rather than writing a new one.
+  - If it settled this the *opposite* way, or its `Alternatives Considered`
+    already rejected the direction you're about to take, you have no
+    interactive access to the user — don't resolve it yourself. Record the
+    conflict in `why-notes.md` under a `## ADR conflict` heading (the existing
+    ADR, the direction you're taking, and why you believe it's still right)
+    and note it prominently in your return value; the orchestrator raises it
+    with the human explicitly at Phase 11.
+  - Otherwise, write an ADR at `docs/adr/NNNN-<slug>.md` with `**Status:**
+    draft`, in the format `vcs-minimalism.md` specifies. Number it from the
+    highest existing file in `docs/adr/` (create the directory if it doesn't
+    exist). Fill in `Alternatives Considered` properly — the alternative you
+    rejected and the specific reason it lost is the part nobody can
+    reconstruct later. Leave the status as `draft`; `persistence-engineer`
+    flips it — and its index row — to `accepted` in Phase 12, after the human
+    approves. **List every ADR you wrote in `why-notes.md`**: that list is how
+    `persistence-engineer` knows which drafts are yours to flip and which
+    belong to somebody else's change.
 
 Do not write an implementation narrative anywhere in the repository. Anything
 that reads as "here's what I did and how it works" belongs in the PR body —
@@ -249,5 +265,7 @@ Return what the orchestrator needs to route the next phase:
   was in one line.
 - Anything you flagged instead of resolving: a doc contradiction, a design doc
   now out of step with the implementation, an acceptance criterion no frozen
-  test covers.
+  test covers, or a decision that conflicts with an existing ADR (name it and
+  its number explicitly — this is the one the orchestrator must raise on its
+  own, not fold into a general "anything else?" summary).
 - Any place you had to choose an interpretation the tests didn't pin down.

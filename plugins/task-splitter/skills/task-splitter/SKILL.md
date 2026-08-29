@@ -72,6 +72,15 @@ Read that document before Phase 2 in `design` mode, and before the confirm gate
 in `split` mode. Pass the same expectation on to the user if they ask why the
 breakdown isn't being written to a file.
 
+[../../docs/decision-precedent.md](../../docs/decision-precedent.md) is the
+companion check: before any decision here — yours or one `design-behavior` or
+`plan-tasks` reports to you — is treated as settled, check it against
+`docs/adr/index.md` for a conflict. `design-behavior` and `plan-tasks` run this
+themselves at their own decision points; a conflict they can't resolve
+themselves lands on you to raise at the confirm gate below, and if you are the
+one writing the ADR yourself — the `split`-mode ADR-only PR at Phase 4 — run
+the check yourself first.
+
 ---
 
 ## Step 0 — Preliminary Checks
@@ -232,7 +241,11 @@ Skill(skill="task-splitter:plan-tasks")
 Show the user the task breakdown summary (task count, topological order,
 titles), and — in either mode — **any ADR this run wrote, in full**. An ADR is
 the artifact with the longest half-life here and deserves the same scrutiny as
-the breakdown.
+the breakdown. If `plan-tasks` (or `design-behavior`) reported a conflict with
+an existing ADR that it couldn't resolve itself, raise that explicitly here,
+separately from the general go/no-go question below — show the existing ADR's
+`Decision` next to the new direction and get the user's agreement on it before
+treating a plain "yes" as covering it.
 
 Use `AskUserQuestion`: "Here's the proposed task breakdown. Proceed to create
 the Map Issue and Task Issues on GitHub?" with options `["yes — register these

@@ -42,6 +42,9 @@ unchanged:
   divergences from `implementation-workflow`: [reference.md](reference.md)
 - What may land in VCS, the *why* routing, and the ADR rules:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
+- Checking a decision against the existing ADR record before you write one,
+  and what to do if it conflicts:
+  [../../docs/decision-precedent.md](../../docs/decision-precedent.md)
 - The filesystem/network constraints this entire run operates under:
   [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
@@ -197,9 +200,17 @@ Phase 4 is where this becomes commits.
 - Reasoning local to one file → a source comment, written *now*, in that file.
 - Reasoning spanning several files → keep it in your working context, phrased
   as you'd write it, for Phase 4's commit message body.
-- Anything that fails the half-day test → an ADR under `docs/adr/`, written
-  with `**Status:** draft` and its row added to `docs/adr/index.md`. Phase 4
-  flips it to `accepted` after the user approves.
+- Anything that fails the half-day test → check it against precedent first
+  ([../../docs/decision-precedent.md](../../docs/decision-precedent.md)): read
+  `docs/adr/index.md` and open any ADR whose title or context plausibly
+  overlaps. If an existing accepted ADR already settled this the same way,
+  cite it (`Refs: ADR-NNNN`) instead of writing a new one. If it conflicts —
+  settled it the opposite way, or its `Alternatives Considered` already
+  rejected the direction you're about to take — raise it with
+  `AskUserQuestion` before continuing, the same way you'd ask about any other
+  genuine fork. Otherwise, write an ADR under `docs/adr/`, with
+  `**Status:** draft` and its row added to `docs/adr/index.md`. Phase 4 flips
+  it to `accepted` after the user approves.
 
 A decision the *user* made in conversation is covered by exactly the same rule.
 The chat log is not in VCS.
