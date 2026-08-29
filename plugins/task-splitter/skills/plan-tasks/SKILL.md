@@ -16,6 +16,9 @@ into GitHub Issues.
 - For the output template, see [templates/task-breakdown-template.md](templates/task-breakdown-template.md)
 - For what belongs in an Issue versus a design doc versus an ADR, see
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2
+- For checking a planning-time decision against the existing ADR record before
+  reporting it, see
+  [../../docs/decision-precedent.md](../../docs/decision-precedent.md)
 
 ---
 
@@ -85,6 +88,15 @@ behaviour excluded in a way that will look like an oversight later. If you had
 to settle one of those to produce the breakdown, that is a **decision made at
 planning time**, and [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
 §3 routes it — most often to an ADR.
+
+Before treating it as new, check it isn't already settled — or already
+rejected: read `docs/adr/index.md` and open anything that plausibly overlaps
+([../../docs/decision-precedent.md](../../docs/decision-precedent.md) has the
+full check). If it conflicts with an existing accepted ADR, or contradicts
+something an ADR's `Alternatives Considered` already rejected, report *that*
+to the orchestrator instead of the decision itself — you don't hold a gate
+with the user, so raising it yourself isn't the right move; the orchestrator
+does, at the confirm gate.
 
 Report it to the orchestrator explicitly, with the fork and the reasoning. Do
 not write the ADR yourself and do not bury the decision in an acceptance

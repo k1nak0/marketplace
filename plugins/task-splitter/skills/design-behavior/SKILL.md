@@ -23,6 +23,9 @@ the design doc already exists and is not this run's to rewrite.
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2
 - For when a design decision needs an ADR, see that document's §3 — and Step 5
   below, which is the phase where this actually comes up
+- For checking a decision against the existing ADR record before you write —
+  and what to do if it conflicts with or contradicts one — see
+  [../../docs/decision-precedent.md](../../docs/decision-precedent.md)
 - For the environment every file write here happens in, see
   [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
 
@@ -105,6 +108,19 @@ and [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §3 says where.
 Go back through the doc you just wrote, line by line, and for each statement
 ask: **was this contested?** If yes, apply the half-day test. If reversing it
 would cost a human half a day or more, write an ADR.
+
+**Before writing it, check for precedent.** Read `docs/adr/index.md` and open
+any ADR whose title or context plausibly overlaps this decision —
+[../../docs/decision-precedent.md](../../docs/decision-precedent.md) has the
+full check. If an existing **accepted** ADR already settled this the same way,
+cite it (`Refs: ADR-NNNN`) instead of writing a new one. If it settled it the
+*opposite* way, or its `Alternatives Considered` already rejected the
+direction you're about to take, do not write past it silently: raise it with
+`AskUserQuestion` — show the existing ADR's `Decision` (or the rejected
+alternative) next to what you're about to decide — and get the user's
+explicit agreement before continuing. Only write a new ADR after that
+agreement, and write it as a supersession per
+[../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §4.
 
 You have no source comments and no multi-file commit to fall back on — this
 plugin writes documents, not code — so at planning time the routing collapses

@@ -28,6 +28,9 @@ Two failure modes to avoid, in order of cost:
   [../../docs/map-issue.md](../../docs/map-issue.md)
 - What may be written to the repository at all:
   [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)
+- Checking a decision against the existing ADR record before you write one,
+  and what to do if it conflicts:
+  [../../docs/decision-precedent.md](../../docs/decision-precedent.md)
 - Branch and PR mechanics: [../../docs/git-workflow.md](../../docs/git-workflow.md)
 - The filesystem/network constraints this run operates under (Step 4 writes
   and pushes): [../../docs/sandbox-environment.md](../../docs/sandbox-environment.md)
@@ -96,8 +99,21 @@ If the change is a genuine reversal of a documented decision rather than a
 correction — the old behaviour was chosen deliberately and is now being
 abandoned — that's an ADR, per
 [../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md)'s half-day test.
+
+Before writing it, check it against precedent
+([../../docs/decision-precedent.md](../../docs/decision-precedent.md)): read
+`docs/adr/index.md` and open any ADR whose title or context plausibly
+overlaps. If the ADR you're about to write conflicts with a *different*
+existing accepted ADR — not the one you already know you're reversing — raise
+it with `AskUserQuestion` before continuing: show that ADR's `Decision` next
+to the new direction and get the user's explicit agreement. It's easy to miss
+this when the reversal you were told about is one you're already confident
+in.
+
 Write it under `docs/adr/`, add its row to `docs/adr/index.md`, and include
-both in this PR.
+both in this PR. If it supersedes the ADR being reversed, add
+`**Supersedes:** ADR-NNNN` to the new file and make the *only* edit to the old
+file its `**Status:**` line, per `vcs-minimalism.md`'s ADR section.
 
 **Write it as `**Status:** accepted`, not `draft`,** with today's `**Date:**`.
 This is the one place in the plugin where an ADR skips the draft stage, and the

@@ -53,9 +53,12 @@ documents, not code, so it has no source comments and no multi-file commit to
 fall back on — at planning time the routing collapses to "ADR, or the reasoning
 is lost". `design-behavior` Step 5 is a mandatory pass over the doc just
 written, asking of each statement whether it was contested; `plan-tasks` Step 5
-does the same for forks surfaced while cutting tasks. Task sizing and ordering
-stay out of ADRs deliberately — that's a snapshot of one planning session and
-belongs in the Map Issue's Notes.
+does the same for forks surfaced while cutting tasks. Both steps now check the
+decision against `docs/adr/index.md` first — see `docs/decision-precedent.md`
+— before writing (or reporting) it as new, and stop for the user's explicit
+agreement if it conflicts with or contradicts an existing ADR. Task sizing and
+ordering stay out of ADRs deliberately — that's a snapshot of one planning
+session and belongs in the Map Issue's Notes.
 
 See `plugins/task-splitter/skills/*/reference.md` for the behavior/
 implementation boundary, the design-doc-versus-ADR worked examples, the
@@ -108,10 +111,14 @@ orchestrator resolves once at Step 0 and passes into every agent prompt:
 | `git-workflow.md` | branching, commit shape, where the implementation gets committed, the soft-reset regroup, push policy |
 | `test-first.md` | the `test-writer`/`implementer` contract, the two kinds of test, how the freeze is verified |
 | `map-issue.md` | the Task Graph table and its status vocabulary, which phase writes which cell, and the `gh issue edit --body-file -` whole-body-rewrite pattern |
+| `decision-precedent.md` | checking a decision against `docs/adr/index.md` before treating it as settled, and what to do when it conflicts with or contradicts an existing ADR |
 
 The first three are read by every file-writing agent; `map-issue.md` is read by
 whoever touches a GitHub Issue — the orchestrator, `requirement-understanding`,
-`issue-refinement`, and `persistence-engineer`.
+`issue-refinement`, and `persistence-engineer`. `decision-precedent.md` is read
+by whichever agent/skill is about to accept a decision as settled or write an
+ADR of its own — `implementer` and `issue-refinement` — plus the orchestrator,
+which raises a conflict `implementer` can't resolve itself at Phase 11.
 
 See `plugins/implementation-workflow/skills/*/reference.md` and `agents/*.md`
 for per-criterion automated/manual routing, the scrutiny checklist, the
@@ -213,18 +220,25 @@ against `implementation-workflow` — is in
   Each copy may also *append* material specific to its own plugin — the
   planning-time ADR signals in `task-splitter`'s §3, the two-mode ADR carrier
   table in its §6 — as long as the shared text stays equivalent.
-- **Four cross-plugin duplications exist on purpose**, because a plugin has to
+- **Five cross-plugin duplications exist on purpose**, because a plugin has to
   work with the others absent and so cannot link into them: the three
   `docs/vcs-minimalism.md` copies, the two `templates/tool-template.md` copies
   (`light-workflow` deliberately has none), the Map Issue table contract
   (`task-splitter`'s `map-issue-template.md` ↔ `implementation-workflow`'s
-  `docs/map-issue.md`), and the three `docs/sandbox-environment.md` copies
+  `docs/map-issue.md`), the three `docs/sandbox-environment.md` copies
   documenting the sandboxed environment every file-writing or network-calling
   agent/skill runs in — what's readable, what's writable, which hosts are
   reachable directly vs. only through `WebFetch`/`WebSearch`, and why a push
-  must always name its branch explicitly instead of using `-u`. Only §6 ("Who
-  reads this") differs between those three, because each plugin has a different
-  set of readers. Keep the existing copies in sync by hand. Duplication
+  must always name its branch explicitly instead of using `-u` — and the three
+  `docs/decision-precedent.md` copies giving decision-making skills/agents a
+  shared check against `docs/adr/index.md` before treating anything as settled.
+  In `sandbox-environment.md` only §6 ("Who reads this") differs between the
+  three copies, because each plugin has a different set of readers; in
+  `decision-precedent.md` both §4 ("What to do on a conflict") and §5 ("Who
+  reads this") differ, because each plugin's decision-making skills/agents also
+  reach the user differently — directly with `AskUserQuestion` for a Skill that
+  already holds the user relationship, or by flagging it in a return value for
+  an Agent that doesn't. Keep the existing copies in sync by hand. Duplication
   *within* a plugin is not in this category — extract it into that plugin's
   `docs/` and link to it. If a fifth workflow ever needs a fifth policy copy,
   revisit the arrangement instead (ADR-0001's last consequence).
@@ -245,7 +259,15 @@ against `implementation-workflow` — is in
   its Phase 2, flipped to `accepted` in its Phase 4 after the approval gate, by
   the orchestrator itself and only for ADRs that run wrote.
   `docs/decision-records/` and `docs/incident-logs/` are frozen historical
-  reference; no new entries.
+  reference; no new entries. **Before any decision-making skill or agent treats
+  a decision as settled** — not only at the moment it writes an ADR — it checks
+  `docs/adr/index.md` and the ADRs that plausibly overlap for a conflict, per
+  each plugin's `docs/decision-precedent.md`; a conflict or a previously
+  rejected alternative stops the run for the user's explicit agreement rather
+  than being silently decided past. **When writing an ADR does turn up a
+  conflict** with an existing accepted one, the new ADR supersedes it —
+  `**Supersedes:** ADR-NNNN` in the new file, and the old file's only edit is
+  its `**Status:**` line — per each `vcs-minimalism.md`'s ADR section.
 - **`docs/manual-tests/`** holds one committed procedure per feature area
   (`<slug>.md`), indexed by `docs/manual-tests/index.md`, which the consuming
   project's `README.md` links to. An automated test is an executable statement

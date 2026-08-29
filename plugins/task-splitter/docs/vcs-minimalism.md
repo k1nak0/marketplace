@@ -191,6 +191,27 @@ Each alternative with the specific reason it lost. The part nobody can
 reconstruct later.
 ```
 
+### Check for conflicts before you write
+
+Before a new ADR is finalized, check whether it conflicts with one already on
+the books: read `docs/adr/index.md`, then open any ADR whose title or context
+plausibly overlaps — index rows summarize, so a title match is not enough to
+clear this and a near-miss title is not enough to skip it. This is the same
+check [decision-precedent.md](decision-precedent.md) asks for before any
+decision is made; if that check already happened, writing the ADR is normally
+where it would have turned up a conflict, not a new place one appears.
+
+If the new decision conflicts with an existing **accepted** ADR — states the
+opposite, or would be contradicted by it — the new ADR must supersede it: add
+`**Supersedes:** ADR-NNNN` to the new file, and make the *only* edit to the
+old file its `**Status:**` line, set to `superseded by ADR-MMMM`. Update both
+rows in `docs/adr/index.md` in the same commit. Do not write a new ADR that
+silently overrides an existing one without this — a reader who finds the old
+ADR first, still marked `accepted`, has no way to know it no longer holds.
+
+If nothing on the books covers this ground, proceed normally — most ADRs
+supersede nothing.
+
 **Lifecycle:** written as `draft`, flipped to `accepted` when the change that
 motivated it ships. **Once an ADR is not `draft`, its `Decision` and `Context`
 are immutable.** To change an accepted decision, write a new ADR with

@@ -102,7 +102,7 @@ and use its parent directory. Record the result as `POLICY_DOCS`. Every
 `Agent(...)` prompt below includes the line:
 
 ```
-Policy docs: <POLICY_DOCS>/  (vcs-minimalism.md, git-workflow.md, test-first.md, map-issue.md, sandbox-environment.md)
+Policy docs: <POLICY_DOCS>/  (vcs-minimalism.md, git-workflow.md, test-first.md, map-issue.md, sandbox-environment.md, decision-precedent.md)
 ```
 
 `map-issue.md` is also yours: every Map Issue read or edit you make inline —
@@ -425,7 +425,12 @@ Show the user:
   would show nothing.
 - The test result (`N passing`) and the observed result of every manual step.
 - Any ADR the implementer wrote, in full. **An ADR is reviewed as carefully as
-  code** — it's the artifact with the longest half-life in the repository.
+  code** — it's the artifact with the longest half-life in the repository. If
+  `implementer` flagged an ADR conflict (an existing accepted ADR it
+  contradicts, or a rejected alternative it revives), raise that explicitly
+  and separately from the general approve/request-changes question below — a
+  plain "approve" should not be read as covering a conflict the user never
+  actually weighed in on.
 - Anything the implementer flagged rather than resolved: doc contradictions, a
   design doc now out of step, an interpretation it had to choose.
 - The Minor findings from `review-report.md` that were left unfixed.
