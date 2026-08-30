@@ -584,6 +584,54 @@ Print the final summary: Task ID, PR URL, the commit series, Map/Task Issue
 links, files changed, test/verification outcome, any ADR written, and any task
 newly unblocked.
 
+## Iterating After the PR Is Open
+
+Phase 13 pushing once does not end this pipeline's involvement in the branch.
+A CI check can fail on GitHub, a human reviewer can leave a PR comment, or the
+user can simply come back and ask for one more change — any reason a further
+push is needed, once the first one has already happened. **None of these are
+new phases; they re-enter the existing ones.** `<POLICY_DOCS>/git-workflow.md`
+§5's invariant — the history matches the clean series at the moment of every
+push, not just the first — is what makes this loop safe: Phase 13 is written
+to regroup from `BASE_SHA` and force-with-lease regardless of how many times
+it's already run.
+
+1. **Get the trigger's content in front of you** — the CI failure log
+   (`gh run view --log-failed` for the run on this branch), the reviewer's PR
+   comment (`gh pr view <PR#> --comments`), or the user's new request. Don't
+   guess at a CI failure from the check name alone; read the actual output.
+2. **Re-invoke `implementer`** (the Phase 10 pattern), workspace and
+   `test-manifest.json` unchanged, with the trigger's content as the feedback.
+   It reads `implementation-log.md` first, as always, and appends a new round.
+   The test freeze still applies — **if the failure is actually in a frozen
+   file** (`test_files`, `manual_test_files`, or `ci_files` from
+   `test-manifest.json`, e.g. CI config that's wrong rather than an
+   implementation that's wrong), that is a `test-dispute.md`, handled exactly
+   as at Phase 10: put it to the user, and only `test-writer` may touch a
+   frozen path, via the amend-the-test-commit path.
+3. **Re-run Phase 11** (`code-reviewer`) on the new diff. Skipping it is the
+   orchestrator's call only for a one-line, unambiguous fix (a typo, a lint
+   rule) — say plainly that you skipped it and why; anything else goes through
+   review same as the first round.
+4. **Confirm with the user before pushing** — reuse Phase 12's question. A
+   fix that was obviously requested (a CI failure, an explicit reviewer
+   comment) still gets shown the diff and the new check output before it goes
+   out; this is not a rubber stamp, it's the same gate.
+5. **Re-invoke `persistence-engineer`** (Phase 13). Same inputs as before; it
+   rebuilds the series from the (now-updated) manifests, verifies the tree,
+   and pushes `--force-with-lease` because the branch was already pushed. It
+   reports the same PR URL — this is an update to the existing PR, not a new
+   one.
+6. **Map Issue / tracking Issue: leave them alone.** `<POLICY_DOCS>/map-issue.md`
+   ties `done` to "the PR is open", not to "the PR is merged", and the tracking
+   Issue's closure at Phase 14 is not reopened for this — the conversation
+   about the fix lives on the PR itself.
+
+If the workspace (`.claude/implementation-workflow/<TASK_ID>/`) isn't in this
+session's context because it's a later, separate invocation, treat it the same
+as any other restart: ask which task directory to continue, per "Resuming
+Within a Session" below.
+
 ## Resuming Within a Session
 
 If this orchestrator is interrupted and re-invoked in the same conversation,

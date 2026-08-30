@@ -212,5 +212,11 @@ git push --force-with-lease origin "<branch-name>"  # after any rewrite of a pus
 - If a push is rejected for a reason other than the lease (auth, protected
   branch, network), surface the error and stop. Do not retry with `--force`.
 
-Once the PR is open and a reviewer sends the change back, the same regroup
-applies, followed by `--force-with-lease`.
+**The invariant does not expire when the PR opens.** Whatever prompts a further
+change on this branch — a reviewer's comment, a failing CI check, the user
+simply asking for one more thing — the same regroup applies before the next
+push, followed by `--force-with-lease`. A CI failure is not a special case:
+it's just one more reason to add to the working tree before regrouping: it is
+never a reason to push a bare `fix ci` commit on top of the existing series.
+See the orchestrator's `SKILL.md`, section "Iterating After the PR Is Open",
+for how this is actually driven once Phase 13 has already run once.
