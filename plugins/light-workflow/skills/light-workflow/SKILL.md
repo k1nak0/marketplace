@@ -195,9 +195,16 @@ implementation is uncommitted, so it is the one command that can destroy it.
 Phase 4 is where this becomes commits.
 
 **Record the _why_ as you go, not at the end.** Per
-[../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2:
+[../../docs/vcs-minimalism.md](../../docs/vcs-minimalism.md) §2, first check
+whether there's anything to record at all — a decision that departs from how
+the rest of the codebase already does this kind of thing, or would otherwise
+surprise a reader, not every line you write. A comment that just restates
+what the function or variable name already says isn't a *why*; delete it
+instead of routing it below:
 
-- Reasoning local to one file → a source comment, written *now*, in that file.
+- Reasoning local to one file → a source comment, written *now*, in that
+  file, explaining *why* it departs from the obvious or the conventional —
+  never restating *what* the code already shows.
 - Reasoning spanning several files → keep it in your working context, phrased
   as you'd write it, for Phase 4's commit message body.
 - Anything that fails the half-day test → check it against precedent first

@@ -93,11 +93,18 @@ so should you.
 ### Step 3 — Record the Why (as you go, not at the end)
 
 Every decision you make that isn't forced has a rationale that will be
-invisible in the diff. `vcs-minimalism.md` gives you three places to put it,
-and one of them applies to each:
+invisible in the diff. Most lines you write are not that — `vcs-minimalism.md`
+§2 now opens with a gate for exactly this: before routing anything into one of
+the three places below, check it's an actual decision (a rejected alternative,
+not just what the requirement implies) and that it deviates from how the rest
+of the codebase already does this kind of thing, or would otherwise surprise a
+reader who knows the requirement but not this one constraint. A comment that
+only restates what the function or variable name already says fails that
+check — delete it, don't route it. What survives goes to one of three places:
 
 - **Reasoning local to one file** → a comment in that file, at the point it
-  applies. Explain *why*, never *what* — the code already says what.
+  applies. Explain *why it departs from the obvious or the conventional*,
+  never *what* — the code already says what.
 - **Reasoning spanning several files** → collect it for the commit message
   body. Write it into
   `.claude/implementation-workflow/<task-id>/why-notes.md` as you go, one entry

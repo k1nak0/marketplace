@@ -91,6 +91,41 @@ Does the reasoning make sense only in the context of one file?
              (unless the half-day test below promotes it to an ADR)
 ```
 
+### First — does this even need saying?
+
+The tree above picks a *channel* for reasoning that's already been judged
+worth recording. It is not itself permission to write something down for
+every decision, and "reasoning local to one file" is not a license to
+describe what a function does. Before routing anything into one of the three
+channels, ask:
+
+1. **Is this actually a decision** — a fork where a different, equally
+   reasonable choice existed and was rejected — or is it just what the
+   requirement already implies? Only the former needs recording.
+2. **Does it deviate from how the rest of the codebase already does this
+   kind of thing?** This is the strongest signal that something is
+   comment-worthy: it breaks a pattern a reader would otherwise assume
+   holds — a different error-handling style than the surrounding module, a
+   library used instead of the one the project standardizes on, an
+   established convention deliberately not followed. Code that follows the
+   codebase's general approach needs no comment defending that choice; code
+   that departs from it does.
+3. **Would a reader be surprised**, knowing the language and the requirement
+   but not this one constraint? If the answer is visible from the
+   function/variable name, the type, or the surrounding code, it isn't
+   surprising — don't write it down.
+4. **Does it just restate what's already named?** A comment that repeats what
+   an identifier already says — `// returns the user's full name` above
+   `getFullName()` — fails this test regardless of how "local to one file"
+   it felt. Delete it instead of routing it anywhere.
+
+Only reasoning that survives all four goes into one of the channels below.
+This is the same test §1 applies to a design doc's old `## Implementation
+Notes` section: a comment (or commit, or ADR entry) that describes *what* the
+code does, rather than *why* it departs from the obvious or the conventional,
+fails it the same way — and telling an agent it *may* record local reasoning
+is not telling it to record local behaviour.
+
 ### The half-day test
 
 > If someone later wanted to reverse this decision, would a human need **half a
@@ -115,6 +150,8 @@ look obviously better to someone who doesn't know why it failed.
 | "Threaded the request ID through five call sites instead of using a global, to keep the workers independently testable" | Commit message | Spans files; reversible in an afternoon |
 | "Chose optimistic locking over row locks for the ledger" | ADR | Reversing it means reworking every writer |
 | "Persist sessions as signed cookies rather than server-side state" | ADR | A contract other services now depend on |
+| "Retrying with exponential backoff here, unlike the linear retry the rest of this service uses, because this call hits a provider that throttles hard" | Source comment | Deviates from the codebase's own convention — exactly the case worth flagging |
+| "This function validates that the email contains an @ symbol" above `isValidEmail()` | **Nowhere — delete it** | Restates the name; not a decision, and follows the pattern a reader would already expect |
 
 A single change often has more than one *why* at more than one level. That's
 fine — write each one where it belongs. Do not duplicate the same rationale
