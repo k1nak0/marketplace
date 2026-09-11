@@ -137,6 +137,19 @@ format) exists instead, mention that it's superseded. Point the user at
 `/implementation-workflow:onboarding` if they want to resolve either
 properly.
 
+Whether or not `docs/tools/` exists, every `Agent(...)` prompt you send to
+`repository-explorer`, `library-researcher`, `test-writer`, `test-reviewer`,
+`implementer`, or `code-reviewer` — first invocation or a later fix/amend
+round — carries a `Tool doc: docs/tools/<agent-name>.md` line telling that
+agent to read its own file (if present) and every `docs/tools/<tool-slug>.md`
+it links to *before doing anything else*, and to decide there whether each
+tool is worth using for this run. This is you handing the agent the pointer
+up front, not a substitute for what its own definition already says to do
+with what it finds — the agent-level docs still govern how a named tool gets
+used at the step where it actually matters. `persistence-engineer` has no
+consumer file (`docs/tools/onboarding`'s reference.md §3) and gets no such
+line.
+
 ## Step 1 — Create the Todo List
 
 ```
@@ -233,6 +246,9 @@ Agent(description="Investigate codebase impact",
       subagent_type="repository-explorer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/repository-explorer.md — before anything else, if it
+exists, read it and every docs/tools/<tool-slug>.md it links to, and decide
+whether to use each tool it names.
 Input: requirements-report.md
 Output: .claude/implementation-workflow/<TASK_ID>/impact-analysis-report.md")
 ```
@@ -251,6 +267,9 @@ Agent(description="Research the required library",
       subagent_type="library-researcher",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/library-researcher.md — before anything else, if it
+exists, read it and every docs/tools/<tool-slug>.md it links to, and decide
+whether to use each tool it names.
 Input: requirements-report.md
 Output: .claude/implementation-workflow/<TASK_ID>/library-usage-report.md")
 ```
@@ -276,6 +295,9 @@ TEST_WRITER_RESULT = Agent(description="Write the frozen specification",
       subagent_type="test-writer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/test-writer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Input: implementation-plan.md, requirements-report.md
 Read test-authoring-log.md first if it exists — it is your own record from
 earlier in this run. Append to it before you finish.")
@@ -297,6 +319,9 @@ TEST_REVIEW_RESULT = Agent(description="Review the test specification",
       subagent_type="test-reviewer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/test-reviewer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Input: test-manifest.json, implementation-plan.md, requirements-report.md")
 ```
 
@@ -307,6 +332,9 @@ FIX_RESULT = Agent(description="Fix test review findings",
       subagent_type="test-writer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/test-writer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Read test-authoring-log.md first — it is your own record from earlier in this run.
 Test review report at .claude/implementation-workflow/<TASK_ID>/test-review-report.md.
 Fix all Critical and Major findings, then re-confirm the automated tests fail
@@ -361,6 +389,9 @@ Agent(description="Amend the specification",
       subagent_type="test-writer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/test-writer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Read test-authoring-log.md first — it is your own record from earlier in this run.
 Human reviewer requested: <feedback>
 Amend the specification and re-confirm the automated tests fail for the right
@@ -392,6 +423,9 @@ IMPL_RESULT = Agent(description="Implement against the frozen tests",
       subagent_type="implementer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/implementer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Input: implementation-plan.md, test-manifest.json
 Read implementation-log.md first if it exists — it is your own record from
 earlier in this run. Append to it before you finish.
@@ -434,6 +468,9 @@ REVIEW_RESULT = Agent(description="Review the implementation",
       subagent_type="code-reviewer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/code-reviewer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Input: test-manifest.json, implementation-plan.md, modified-files.json,
 requirements-report.md, why-notes.md, impact-analysis-report.md")
 ```
@@ -453,6 +490,9 @@ FIX_RESULT = Agent(description="Fix review findings",
       subagent_type="implementer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/implementer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Read implementation-log.md first — it is your own record from earlier in this run.
 Review report at .claude/implementation-workflow/<TASK_ID>/review-report.md.
 Fix all Critical and Major findings, then re-verify. The test freeze still
@@ -505,6 +545,9 @@ FIX_RESULT = Agent(description="Address human review feedback",
       subagent_type="implementer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/implementer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Read implementation-log.md first — it is your own record from earlier in this run.
 Human reviewer requested: <feedback>
 Address and re-verify. The test freeze still applies. Append a new round to
@@ -546,6 +589,9 @@ Agent(description="Reconcile the modified-files list",
       subagent_type="implementer",
       prompt="Workspace: .claude/implementation-workflow/<TASK_ID>/
 Policy docs: <POLICY_DOCS>/
+Tool doc: docs/tools/implementer.md — before anything else, if it exists,
+read it and every docs/tools/<tool-slug>.md it links to, and decide whether
+to use each tool it names.
 Read implementation-log.md first — it is your own record from earlier in this run.
 Phase 13 could not account for every change: see regroup-discrepancy.diff.
 Reconcile modified-files.json with what is actually in the working tree, and

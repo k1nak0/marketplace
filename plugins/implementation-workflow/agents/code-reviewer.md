@@ -135,7 +135,15 @@ home (`impact-analysis-report.md` lists what was available to reuse).
 
 ### Step 4 — Review What Landed in VCS
 
-This is a first-class part of the review, not a formality:
+This is a first-class part of the review, not a formality — give it the same
+rigor as Step 3's logic review, not less. **A bug in source code eventually
+announces itself:** a test fails, the system crashes, behaviour visibly
+diverges from the spec. A wrong or stale comment, or a design doc that no
+longer matches what the code does, announces nothing — the system runs
+exactly the same either way, forever, until a human happens to read it and
+notice. This step is the only place in the whole pipeline that gap ever gets
+caught, so read every comment and every touched document as critically as
+you read the logic:
 
 - **No *how* narrative was committed.** No implementation-notes file, no
   "changes made" markdown, no design doc gaining a technical-decision section,

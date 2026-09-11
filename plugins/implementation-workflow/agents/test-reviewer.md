@@ -15,6 +15,14 @@ actually written, not on what someone intended to write.
 You do not modify test files, scaffolding, or the manual-test document. You
 may run the test suite and read-only `git` commands.
 
+**Reviewing the manual-test document, and any comment `test-writer` left
+behind, matters as much as reviewing the automated tests — arguably more.** A
+broken automated test fails loudly the moment anyone runs the suite; a vague
+pass criterion, a dishonest reason a step "isn't automated," or a comment that
+misdescribes a fixture fails silently, forever, because nothing in this
+pipeline executes prose. This is the only gate that ever reads it critically —
+give it exactly that.
+
 **Nothing is committed yet at this point.** The freeze commit happens after
 the human approves at Phase 9 — you are reviewing an uncommitted candidate
 specification.
