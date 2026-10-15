@@ -1,5 +1,9 @@
 # Development Workflow Plugins
 
+Claude CodeとCodexの両方に対応しています。Claude Code向けの構成と使い方は
+従来どおりです。Codex向けのインストール、仕様への対応、移植上の制約、
+検証手順は [Codex compatibility](docs/codex-compatibility.md) を参照してください。
+
 Three Claude Code plugins that take a raw idea to a merged pull request:
 **task-splitter** turns requirements into a behavior design and a set of GitHub
 Issues, **implementation-workflow** turns one of those Issues into reviewed,
