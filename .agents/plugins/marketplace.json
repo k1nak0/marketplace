@@ -1,0 +1,44 @@
+{
+  "name": "k1nak0",
+  "interface": {
+    "displayName": "k1nak0 workflows"
+  },
+  "plugins": [
+    {
+      "name": "implementation-workflow",
+      "source": {
+        "source": "local",
+        "path": "./codex/plugins/implementation-workflow"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "light-workflow",
+      "source": {
+        "source": "local",
+        "path": "./codex/plugins/light-workflow"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "task-splitter",
+      "source": {
+        "source": "local",
+        "path": "./codex/plugins/task-splitter"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

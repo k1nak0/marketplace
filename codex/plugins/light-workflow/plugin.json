@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "light-workflow",
+  "version": "1.0.0",
+  "description": "A single-skill lightweight implementation workflow: branch preparation, a requirement discussion with the user, implementation that consults the user whenever it hits a real fork, one human approval gate, then commit, push, and PR. No test freeze, no automated review gate, no Issue registration \u2014 but the same VCS minimalism: source code is the only *how*, and every *why* lands in a comment, a commit message, or an ADR.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "light-workflow",
+        "shortDescription": "Reusable development workflow for Codex"
+      }
+    }
+  }
+}
