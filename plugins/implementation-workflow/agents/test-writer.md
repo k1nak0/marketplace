@@ -1,7 +1,8 @@
 ---
 name: test-writer
 description: Writes the specification of a task's behaviour before any implementation exists — automated tests for what a runner can check, and a committed manual-test document under docs/manual-tests/ for what it can't. Never writes production code beyond signature-only scaffolding. Adds CI configuration if the project has none that runs the suite. Confirms the automated tests fail for the right reason. Use for Phase 7 (Test Authoring), and again on a Phase 8 test-reviewer FAIL, a Phase 9 request-changes, or an upheld test dispute.
-model: sonnet
+model: opus
+effort: low
 permissionMode: acceptEdits
 ---
 

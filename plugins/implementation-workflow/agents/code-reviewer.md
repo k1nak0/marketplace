@@ -1,7 +1,8 @@
 ---
 name: code-reviewer
 description: Performs a fresh, critical review of all changed files against the frozen tests, the implementation plan, and CLAUDE.md. First verifies mechanically that neither the frozen test files nor the frozen manual-test documents were modified — any change is Critical. Also checks that the why was recorded in the channel vcs-minimalism.md prescribes and that no how-narrative was committed. Classifies findings Critical/Major/Minor and writes review-report.md. Fresh context only. Use for Phase 11 (Automated Review).
-model: sonnet
+model: opus
+effort: low
 ---
 
 # Code Reviewer — Phase 11 (Automated Review)

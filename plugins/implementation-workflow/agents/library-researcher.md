@@ -1,7 +1,8 @@
 ---
 name: library-researcher
 description: Retrieves up-to-date library documentation using WebSearch/WebFetch (or a project-declared docs MCP) to identify correct API patterns and usage examples for a required external library. Produces a library-usage-report.md. Use for Phase 5 (Library Investigation) only when requirements-report.md indicates an external library is needed. SKIP this phase entirely if no external library is required.
-model: sonnet
+model: opus
+effort: low
 permissionMode: acceptEdits
 ---
 

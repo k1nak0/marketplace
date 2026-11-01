@@ -1,7 +1,8 @@
 ---
 name: repository-explorer
 description: Investigates a codebase using Grep/Glob/Read to identify files, symbols, and reference chains relevant to a feature request. Produces an impact-analysis-report.md. Use for Phase 4 (Codebase Investigation) after Phase 3 has cut the work branch.
-model: sonnet
+model: opus
+effort: low
 permissionMode: acceptEdits
 ---
 

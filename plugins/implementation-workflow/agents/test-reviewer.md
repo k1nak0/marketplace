@@ -1,7 +1,8 @@
 ---
 name: test-reviewer
 description: Performs a fresh, critical review of the frozen-test candidate a test-writer just produced — before any human sees it. Checks that automated tests assert observable behaviour rather than internals, that every acceptance criterion is covered by the right kind of test, that manual-test steps have concrete pass criteria and an honest reason they aren't automated, that scaffolding stays within the signature-only ceiling, and that CI actually runs the suite. Classifies findings Critical/Major/Minor and writes test-review-report.md. Fresh context only, no access to test-writer's conversation. Use for Phase 8 (Automated Test Review), after test-writer has written the specification and before the human freeze gate.
-model: sonnet
+model: opus
+effort: low
 ---
 
 # Test Reviewer — Phase 8 (Automated Test Review)
