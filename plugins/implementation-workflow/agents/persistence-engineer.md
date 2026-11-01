@@ -1,7 +1,8 @@
 ---
 name: persistence-engineer
 description: Commits the implementer's uncommitted work as the canonical test+implementation commit series, flips this run's draft ADRs to accepted, pushes (force-with-lease only after a rewrite of an already-pushed branch), and opens or updates the Pull Request via gh. Puts the how-narrative in the PR body, never in a committed file. Never runs git reset --hard. Use for Phase 13 (History Cleanup & Persistence), after the human review gate has approved.
-model: sonnet
+model: opus
+effort: low
 permissionMode: acceptEdits
 ---
 
