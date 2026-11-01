@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "implementation-workflow",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "A multi-agent implementation pipeline that takes a GitHub Map Issue task (or a standalone requirement) through user scrutiny, optional Issue refinement, codebase investigation, planning, a human-approved test-first specification (automated tests plus committed manual test procedures), implementation against frozen tests, automated and human review, history cleanup, and PR.",
   "extensions": {
     "com.openai": {
